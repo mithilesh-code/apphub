@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Wizard - Multiplication Master with Animals & Vehicles</title>
+    <!-- Tailwind CSS for Responsive Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes float-up {
+            0% { transform: translateY(0px) scale(1); opacity: 1; }
+            50% { transform: translateY(-15px) scale(1.05); }
+            100% { transform: translateY(0px) scale(1); opacity: 1; }
+        }
+        .animate-float {
+            animation: float-up 3s ease-in-out infinite;
+        }
+        @keyframes pop {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.8; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+        .animate-pop {
+            animation: pop 0.4s forwards;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 min-h-screen text-gray-800 font-sans select-none flex flex-col justify-between">
+
+    <!-- Header / Navigation -->
+    <header class="bg-white/10 backdrop-blur-md text-white py-4 px-6 shadow-lg">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="bg-yellow-400 text-indigo-900 p-3 rounded-full shadow-md text-2xl font-black">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black tracking-wide">Math Wizard</h1>
+                    <p class="text-xs text-indigo-200">Interactive Multiplication Table Learning App</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <button onclick="location.href='index.html'" class="px-4 py-2 rounded-xl text-sm font-bold bg-white text-indigo-700 shadow-md">
+                    <i class="fa-solid fa-house mr-1"></i> Home
+                </button>
+            </div>
+            
+            <!-- Mode Switcher Buttons -->
+            <div class="flex bg-black/20 p-1.5 rounded-2xl gap-2">
+                <button onclick="switchMode('normal')" id="btn-normal" class="px-4 py-2 rounded-xl text-sm font-bold transition-all bg-white text-indigo-700 shadow-md">
+                    <i class="fa-solid fa-book-open mr-1"></i> Normal
+                </button>
+                <button onclick="switchMode('game')" id="btn-game" class="px-4 py-2 rounded-xl text-sm font-bold transition-all text-white hover:bg-white/10">
+                    <i class="fa-solid fa-gamepad mr-1"></i> Game Mode
+                </button>
+                <button onclick="switchMode('quiz')" id="btn-quiz" class="px-4 py-2 rounded-xl text-sm font-bold transition-all text-white hover:bg-white/10">
+                    <i class="fa-solid fa-brain mr-1"></i> Quiz Challenge
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-6xl w-full mx-auto p-4 md:p-6 flex-grow flex flex-col justify-center">
+
+        <!-- Global Settings Bar -->
+        <div class="bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-xl mb-6 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex flex-wrap items-center gap-3">
+                <span class="font-bold text-indigo-900"><i class="fa-solid fa-sliders mr-2"></i>Table Range:</span>
+                <div class="flex items-center gap-2">
+                    <label for="start-range" class="text-sm font-semibold text-gray-600">From:</label>
+                    <input type="number" id="start-range" value="1" min="1" max="50" class="w-16 px-2 py-1 border rounded-lg text-center font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <div class="flex items-center gap-2">
+                    <label for="end-range" class="text-sm font-semibold text-gray-600">To:</label>
+                    <input type="number" id="end-range" value="10" min="1" max="50" class="w-16 px-2 py-1 border rounded-lg text-center font-bold focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <button onclick="updateRange()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg font-bold text-sm shadow transition-all">
+                    Apply
+                </button>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- Excel Download Button -->
+                <button onclick="downloadExcelTables()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl font-bold text-xs shadow transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-file-excel text-sm"></i> Download Excel / CSV
+                </button>
+
+                <!-- Voice Selection Dropdown (Strictly English Only - Max 3 Audio Modes) -->
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-indigo-900 text-sm"><i class="fa-solid fa-microphone-lines text-indigo-600 mr-1"></i>Audio Mode:</span>
+                    <select id="voice-select" class="px-3 py-1.5 border rounded-xl text-xs font-bold text-indigo-900 bg-indigo-50 border-indigo-200 outline-none cursor-pointer max-w-[210px]">
+                        <option value="">Loading Audio Modes...</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= NORMAL MODE ================= -->
+        <div id="mode-normal" class="space-y-6">
+            <div class="text-center text-white mb-2">
+                <h2 class="text-3xl font-extrabold drop-shadow">Explore Multiplication Tables</h2>
+                <p class="text-indigo-100 text-sm">Click speaker icon or use Auto Play with customizable speed from 0.25x to 3x!</p>
+            </div>
+
+            <!-- Auto Play Control Panel with Speed Adjustment (.25x to 3x) -->
+            <div class="bg-white/95 backdrop-blur-md rounded-2xl p-4 shadow-md flex flex-wrap justify-between items-center gap-4 max-w-2xl mx-auto w-full">
+                <div class="flex items-center gap-2">
+                    <span class="font-bold text-indigo-900 text-sm"><i class="fa-solid fa-volume-high mr-2 text-indigo-600"></i>Auto Recite:</span>
+                    <button onclick="startAutoPlay()" id="btn-ap-play" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow transition flex items-center gap-1">
+                        <i class="fa-solid fa-play"></i> Play
+                    </button>
+                    <button onclick="pauseAutoPlay()" id="btn-ap-pause" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow transition flex items-center gap-1 opacity-50 cursor-not-allowed" disabled>
+                        <i class="fa-solid fa-pause"></i> Pause
+                    </button>
+                    <button onclick="stopAutoPlay()" id="btn-ap-stop" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow transition flex items-center gap-1 opacity-50 cursor-not-allowed" disabled>
+                        <i class="fa-solid fa-stop"></i> Stop
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <label for="autoplay-speed-select" class="font-bold text-indigo-900 text-sm"><i class="fa-solid fa-gauge-high mr-1 text-indigo-600"></i>Speed:</label>
+                    <select id="autoplay-speed-select" class="px-2.5 py-1.5 border rounded-xl text-xs font-bold text-indigo-900 bg-indigo-50 border-indigo-200 outline-none cursor-pointer">
+                        <option value="0.25">0.25x</option>
+                        <option value="0.5">0.5x</option>
+                        <option value="0.75">0.75x</option>
+                        <option value="1" selected>1.0x</option>
+                        <option value="1.25">1.25x</option>
+                        <option value="1.5">1.5x</option>
+                        <option value="2.0">2.0x</option>
+                        <option value="2.5">2.5x</option>
+                        <option value="3.0">3.0x</option>
+                    </select>
+                </div>
+
+                <div id="autoplay-status" class="text-xs font-bold text-indigo-700 italic w-full text-center sm:w-auto">Ready to recite tables</div>
+            </div>
+
+            <div id="tables-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Generated dynamically -->
+            </div>
+        </div>
+
+        <!-- ================= GAME MODE (Animals, Vehicles & Sound Effects) ================= -->
+        <div id="mode-game" class="hidden flex flex-col items-center justify-center bg-white/95 backdrop-blur-lg rounded-3xl p-6 shadow-2xl relative min-h-[520px]">
+            
+            <!-- Game Sub-Variant Selector & Controls Header -->
+            <div class="w-full flex flex-col md:flex-row justify-between items-center mb-4 border-b pb-3 gap-3">
+                <div class="flex bg-indigo-50 p-1 rounded-xl gap-1">
+                    <button onclick="setGameVariant('balloon')" id="gvar-balloon" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow">🎈 Safari Pop</button>
+                    <button onclick="setGameVariant('dragdrop')" id="gvar-dragdrop" class="px-3 py-1.5 rounded-lg text-xs font-bold text-indigo-700 hover:bg-indigo-100">🧩 Vehicle Garage</button>
+                    <button onclick="setGameVariant('flash')" id="gvar-flash" class="px-3 py-1.5 rounded-lg text-xs font-bold text-indigo-700 hover:bg-indigo-100">⚡ Zoo & Track Rush</button>
+                </div>
+
+                <div class="flex gap-4 items-center">
+                    <span class="bg-indigo-100 text-indigo-800 font-bold px-3 py-1 rounded-full text-xs">Score: <span id="game-score">0</span></span>
+                    <span class="bg-pink-100 text-pink-800 font-bold px-3 py-1 rounded-full text-xs">Lives: <span id="game-lives">❤️❤️❤️</span></span>
+                </div>
+
+                <div class="flex gap-2 items-center">
+                    <label class="text-xs font-bold text-gray-600">Speed:</label>
+                    <input type="range" id="game-speed" min="1" max="5" value="2" class="cursor-pointer w-20">
+                    <button onclick="toggleGamePause()" id="btn-pause" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow">
+                        <i class="fa-solid fa-pause"></i> Pause
+                    </button>
+                    <button onclick="toggleFullScreen()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded-lg text-xs font-bold shadow">
+                        <i class="fa-solid fa-expand"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Game Arena Area -->
+            <div id="game-arena" class="w-full h-80 bg-gradient-to-b from-indigo-50 to-pink-50 rounded-2xl relative overflow-hidden border-2 border-indigo-100 flex flex-col items-center justify-center">
+                
+                <!-- Start Screen -->
+                <div id="game-start-screen" class="text-center p-6 z-20">
+                    <div class="text-4xl mb-2 flex justify-center gap-3">
+                        <span>🦁</span><span>🐘</span><span>🚗</span><span>🚂</span>
+                    </div>
+                    <h3 id="game-title-header" class="text-2xl font-black text-indigo-900 mb-2">Animal & Vehicle Math Safari!</h3>
+                    <p id="game-desc-header" class="text-gray-600 mb-4 text-sm">Solve math challenges featuring wild animals and fast transport vehicles with fun sounds!</p>
+                    <button onclick="startGameSession()" class="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-8 py-3 rounded-2xl font-extrabold text-lg shadow-lg hover:scale-105 transition-all">
+                        <i class="fa-solid fa-play mr-2"></i> Start Safari
+                    </button>
+                </div>
+
+                <!-- Variant 1: Balloon Pop Content (Safari Animals) -->
+                <div id="game-balloon-content" class="hidden absolute inset-0 flex flex-col items-center justify-center p-4">
+                    <div class="bg-white px-6 py-3 rounded-2xl shadow-md border border-indigo-100 mb-4 text-center flex items-center gap-3">
+                        <span id="safari-animal-icon" class="text-3xl">🦁</span>
+                        <div>
+                            <span class="text-xs text-indigo-500 font-bold block">Pop the correct balloon for:</span>
+                            <h4 id="balloon-prompt-eq" class="text-3xl font-black text-indigo-950">7 × 8 = ?</h4>
+                        </div>
+                    </div>
+                    <div id="balloon-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-lg">
+                        <!-- Populated dynamically with balloons -->
+                    </div>
+                </div>
+
+                <!-- Variant 2: Drag and Drop Content (Transport Garage) -->
+                <div id="game-dragdrop-content" class="hidden absolute inset-0 flex flex-col items-center justify-center p-4">
+                    <div class="bg-white px-8 py-4 rounded-2xl shadow-md border-2 border-dashed border-indigo-300 mb-6 text-center" 
+                         ondragover="allowDrop(event)" ondrop="dropAnswer(event)">
+                        <div class="flex justify-center gap-2 mb-1">
+                            <span id="vehicle-icon-display" class="text-2xl">🚗</span>
+                            <span class="text-xs text-indigo-500 font-bold uppercase tracking-wider">Vehicle Garage Drop Zone</span>
+                        </div>
+                        <h4 id="drag-prompt-eq" class="text-3xl font-black text-indigo-950">5 × 6 = ?</h4>
+                        <div id="drop-zone" class="mt-2 text-indigo-400 text-xs italic font-semibold">[Drop Vehicle Chip Here]</div>
+                    </div>
+                    <div id="drag-source-container" class="flex flex-wrap justify-center gap-3 w-full max-w-md">
+                        <!-- Draggable answer chips -->
+                    </div>
+                </div>
+
+                <!-- Variant 3: Speed Rush Flashcard Content (Zoo & Track) with Multiple Choice Options -->
+                <div id="game-flash-content" class="hidden absolute inset-0 flex flex-col items-center justify-center p-4">
+                    <div class="w-full max-w-xs bg-gray-200 h-2 rounded-full mb-3 overflow-hidden">
+                        <div id="flash-timer-bar" class="bg-pink-500 h-full w-full transition-all duration-100"></div>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-2xl shadow-lg text-center mb-3 flex items-center gap-3 max-w-md w-full justify-center">
+                        <span id="rush-icon" class="text-3xl">🚀</span>
+                        <div>
+                            <h4 id="flash-prompt-eq" class="text-2xl font-black mb-0.5">9 × 9 = ?</h4>
+                            <p class="text-[11px] text-indigo-200">Zoo & Track Speed Rush!</p>
+                        </div>
+                    </div>
+                    <div id="flash-options-grid" class="grid grid-cols-2 gap-3 w-full max-w-md">
+                        <!-- Populated dynamically with multiple choice buttons -->
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Game Input Footer (Fallback / Unused for Flash now that MCQs are active) -->
+            <div id="game-input-area" class="w-full mt-4 flex gap-3 hidden">
+                <input type="number" id="game-answer-input" placeholder="Type answer..." class="flex-grow px-4 py-3 border-2 border-indigo-200 rounded-xl text-xl font-bold text-center focus:ring-4 focus:ring-indigo-400 outline-none">
+                <button onclick="submitGameAnswer()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow">Submit</button>
+            </div>
+        </div>
+
+        <!-- ================= QUIZ MODE ================= -->
+        <div id="mode-quiz" class="hidden bg-white/95 backdrop-blur-lg rounded-3xl p-6 md:p-8 shadow-2xl max-w-2xl mx-auto w-full">
+            <div class="flex justify-between items-center mb-6 border-b pb-4">
+                <div>
+                    <h3 class="text-2xl font-extrabold text-indigo-900">Quiz Challenge</h3>
+                    <p class="text-xs text-gray-500" id="quiz-mode-subtitle">Standard & Advanced Missing Factor Challenge (Max Multiplier 10)</p>
+                </div>
+                <div class="text-right">
+                    <span class="bg-purple-100 text-purple-800 font-bold px-3 py-1 rounded-full text-xs">Question <span id="quiz-q-num">1</span>/10</span>
+                </div>
+            </div>
+
+            <div id="quiz-card" class="space-y-6">
+                <div class="bg-indigo-50 border-2 border-indigo-100 p-6 rounded-2xl text-center">
+                    <h4 id="quiz-question-text" class="text-3xl font-black text-indigo-950 mb-2">9 × ? = 72</h4>
+                    <p class="text-xs text-indigo-600 font-semibold" id="quiz-hint-type">Find the missing number!</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4" id="quiz-options-container">
+                    <!-- Options populated dynamically -->
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <input type="number" id="quiz-text-input" placeholder="Or type/speak answer..." class="flex-grow px-4 py-3 border-2 border-gray-200 rounded-xl font-bold text-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <button onclick="submitQuizTextAnswer()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow">Check</button>
+                    <button onclick="startVoiceRecognition('quiz')" class="bg-pink-500 hover:bg-pink-600 text-white px-5 py-3 rounded-xl shadow text-xl">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quiz Scorecard Modal View -->
+            <div id="quiz-results" class="hidden text-center py-8 space-y-4">
+                <div class="text-6xl text-yellow-500">🏆</div>
+                <h3 class="text-3xl font-black text-indigo-900">Quiz Completed!</h3>
+                <p class="text-lg text-gray-600" id="quiz-final-score">You scored 10 out of 10!</p>
+                <button onclick="startQuiz()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-2xl font-bold shadow-lg">Play Again</button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 text-white/80 text-xs mt-6">
+        Math Wizard App • Built for Young Learners with English Audio, Animals, Vehicles & Sound Effects ✨
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // --- Web Audio API Sound Effects Generator ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (!audioCtx) return;
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'success') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(523.25, now); // C5
+                osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                gainNode.gain.setValueAtTime(0.2, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.setValueAtTime(100, now + 0.15);
+                gainNode.gain.setValueAtTime(0.2, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'animal') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.2);
+                gainNode.gain.setValueAtTime(0.2, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'vehicle') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(220, now);
+                osc.frequency.setValueAtTime(330, now + 0.1);
+                gainNode.gain.setValueAtTime(0.15, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            }
+        }
+
+        // --- Animals & Vehicles Data Arrays ---
+        const safariAnimals = ['🦁', '🐯', '🐘', '🦒', '🦓', '🐼', '🦊', '🐨', '🐵', '🐻'];
+        const transportVehicles = ['🚗', '🚙', '🚌', '🚒', '🚓', '🚕', '✈️', '🚂', '🚀', '🚁'];
+
+        // --- State Management ---
+        let startNum = 1;
+        let endNum = 10;
+        let currentMode = 'normal';
+        let currentGameVariant = 'balloon';
+        let availableVoices = [];
+
+        // --- Strictly 3 English Audio Modes (No Hindi) ---
+        function populateVoices() {
+            if (!('speechSynthesis' in window)) return;
+            availableVoices = window.speechSynthesis.getVoices();
+            const voiceSelect = document.getElementById('voice-select');
+            if (!voiceSelect) return;
+
+            voiceSelect.innerHTML = '<option value="">Default Voice</option>';
+
+            let englishVoices = [];
+            availableVoices.forEach(voice => {
+                const lang = voice.lang ? voice.lang.toLowerCase() : '';
+                const name = voice.name ? voice.name.toLowerCase() : '';
+
+                if (lang.startsWith('en') && !name.includes('hindi') && !lang.includes('hi')) {
+                    const isFemale = name.includes('female') || name.includes('zira') || name.includes('samantha') || name.includes('victoria') || name.includes('karen') || name.includes('hazel');
+                    const gender = isFemale ? 'Female' : 'Male';
+                    englishVoices.push({ voice: voice, label: `English - ${gender}` });
+                }
+            });
+
+            if (englishVoices.length < 3) {
+                availableVoices.forEach(voice => {
+                    if (englishVoices.length >= 3) return;
+                    const lang = voice.lang ? voice.lang.toLowerCase() : '';
+                    const name = voice.name ? voice.name.toLowerCase() : '';
+                    if (!name.includes('hindi') && !lang.includes('hi') && !englishVoices.some(v => v.voice === voice)) {
+                        const gender = (name.includes('female') || name.includes('zira') || name.includes('samantha')) ? 'Female' : 'Male';
+                        englishVoices.push({ voice: voice, label: `English - ${gender}` });
+                    }
+                });
+            }
+
+            englishVoices = englishVoices.slice(0, 3);
+
+            englishVoices.forEach((item) => {
+                let actualIndex = availableVoices.indexOf(item.voice);
+                const option = document.createElement('option');
+                option.value = actualIndex;
+                option.textContent = `🎙️ ${item.voice.name} (${item.label})`;
+                voiceSelect.appendChild(option);
+            });
+        }
+
+        if ('speechSynthesis' in window) {
+            populateVoices();
+            if (window.speechSynthesis.onvoiceschanged !== undefined) {
+                window.speechSynthesis.onvoiceschanged = populateVoices;
+            }
+        }
+
+        function speakText(text, isLoudAppreciation = false) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                
+                // Get speed from normal autoplay settings or default to 1.0
+                const speedSelect = document.getElementById('autoplay-speed-select');
+                const currentSpeed = speedSelect ? parseFloat(speedSelect.value) : 1.0;
+                utterance.rate = isLoudAppreciation ? Math.min(3.0, currentSpeed * 1.1) : currentSpeed;
+                utterance.pitch = isLoudAppreciation ? 1.3 : 1.0;
+
+                const voiceSelect = document.getElementById('voice-select');
+                if (voiceSelect && voiceSelect.value !== "") {
+                    const selectedVoice = availableVoices[parseInt(voiceSelect.value)];
+                    if (selectedVoice) {
+                        utterance.voice = selectedVoice;
+                    }
+                }
+
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // Voice Recognition Helper for Quiz
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+        }
+
+        function startVoiceRecognition(contextType) {
+            if (!recognition) {
+                alert("Speech recognition is not supported in this browser. Please use Chrome or Edge.");
+                return;
+            }
+            speakText("Listening...");
+            recognition.onresult = function(event) {
+                const speechResult = event.results[0][0].transcript.trim();
+                const numericVal = parseInt(speechResult.replace(/[^0-9]/g, ''));
+                
+                if (!isNaN(numericVal)) {
+                    if (contextType === 'quiz') {
+                        document.getElementById('quiz-text-input').value = numericVal;
+                        submitQuizTextAnswer();
+                    }
+                } else {
+                    speakText("I didn't catch a number. Please try again.");
+                }
+            };
+            recognition.start();
+        }
+
+        // --- Excel / CSV Table Download ---
+        function downloadExcelTables() {
+            let csvContent = "data:text/csv;charset=utf-8,Table,Multiplier,Result\n";
+            for (let i = startNum; i <= endNum; i++) {
+                for (let j = 1; j <= 10; j++) {
+                    csvContent += `${i},${j},${i * j}\n`;
+                }
+            }
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `math_tables_${startNum}_to_${endNum}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            speakText("Tables downloaded successfully as spreadsheet!");
+        }
+
+        // --- Range Settings ---
+        function updateRange() {
+            const s = parseInt(document.getElementById('start-range').value);
+            const e = parseInt(document.getElementById('end-range').value);
+            if (s > e || isNaN(s) || isNaN(e)) {
+                alert("Please check your range values. Start must be less than or equal to End.");
+                return;
+            }
+            startNum = s;
+            endNum = e;
+            stopAutoPlay();
+            renderNormalTables();
+            speakText(`Tables updated from ${startNum} to ${endNum}`);
+        }
+
+        // --- Mode Switching ---
+        function switchMode(mode) {
+            stopAutoPlay();
+            currentMode = mode;
+            ['normal', 'game', 'quiz'].forEach(m => {
+                document.getElementById(`mode-${m}`).classList.add('hidden');
+                document.getElementById(`btn-${m}`).className = "px-4 py-2 rounded-xl text-sm font-bold transition-all text-white hover:bg-white/10";
+            });
+            document.getElementById(`mode-${mode}`).classList.remove('hidden');
+            document.getElementById(`btn-${mode}`).className = "px-4 py-2 rounded-xl text-sm font-bold transition-all bg-white text-indigo-700 shadow-md";
+
+            if (mode === 'normal') renderNormalTables();
+            if (mode === 'quiz') startQuiz();
+        }
+
+        // --- NORMAL MODE & AUTO PLAY ---
+        function getMultiplierWord(j) {
+            return j === 1 ? "ones" : (j === 2 ? "twos" : j === 3 ? "threes" : j === 4 ? "fours" : j === 5 ? "fives" : j === 6 ? "sixes" : j === 7 ? "sevens" : j === 8 ? "eights" : j === 9 ? "nines" : j === 10 ? "tens" : `${j}s`);
+        }
+
+        function renderNormalTables() {
+            const container = document.getElementById('tables-container');
+            container.innerHTML = '';
+            for (let i = startNum; i <= endNum; i++) {
+                let card = document.createElement('div');
+                card.className = "bg-white rounded-2xl p-5 shadow-xl flex flex-col justify-between border-t-4 border-indigo-500";
+                
+                let iconDecor = (i % 2 === 0) ? safariAnimals[i % safariAnimals.length] : transportVehicles[i % transportVehicles.length];
+
+                let htmlContent = `<div class="flex justify-between items-center mb-3 border-b pb-2">
+                    <h3 class="font-extrabold text-xl text-indigo-900 flex items-center gap-2"><span>${iconDecor}</span> Table of ${i}</h3>
+                    <button onclick="speakTable(${i})" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-200 p-2 rounded-xl text-sm transition"><i class="fa-solid fa-volume-high"></i></button>
+                </div><div class="space-y-1.5 text-sm">`;
+
+                for (let j = 1; j <= 10; j++) {
+                    htmlContent += `<div class="flex justify-between px-2 py-1 rounded hover:bg-indigo-50 font-medium">
+                        <span>${i} × ${j}</span>
+                        <span class="font-bold text-indigo-700">= ${i * j}</span>
+                    </div>`;
+                }
+                htmlContent += `</div>`;
+                card.innerHTML = htmlContent;
+                container.appendChild(card);
+            }
+        }
+
+        function speakTable(num) {
+            stopAutoPlay();
+            let text = `Multiplication table of ${num}. `;
+            for (let j = 1; j <= 10; j++) {
+                let multWord = getMultiplierWord(j);
+                text += `${num} ${multWord} are ${num * j}. `;
+            }
+            speakText(text);
+        }
+
+        // Auto Play Engine State & Controls
+        let autoPlayActive = false;
+        let autoPlayPaused = false;
+        let apTable = 1;
+        let apMultiplier = 1;
+
+        function startAutoPlay() {
+            if (!('speechSynthesis' in window)) {
+                alert("Speech synthesis is not supported in this browser.");
+                return;
+            }
+            autoPlayActive = true;
+            autoPlayPaused = false;
+            apTable = startNum;
+            apMultiplier = 1;
+
+            document.getElementById('btn-ap-play').disabled = true;
+            document.getElementById('btn-ap-play').classList.add('opacity-50', 'cursor-not-allowed');
+            document.getElementById('btn-ap-pause').disabled = false;
+            document.getElementById('btn-ap-pause').classList.remove('opacity-50', 'cursor-not-allowed');
+            document.getElementById('btn-ap-stop').disabled = false;
+            document.getElementById('btn-ap-stop').classList.remove('opacity-50', 'cursor-not-allowed');
+
+            reciteNextAutoPlayLine();
+        }
+
+        function pauseAutoPlay() {
+            if (!autoPlayActive) return;
+            autoPlayPaused = !autoPlayPaused;
+            const pauseBtn = document.getElementById('btn-ap-pause');
+            if (autoPlayPaused) {
+                window.speechSynthesis.pause();
+                pauseBtn.innerHTML = `<i class="fa-solid fa-play"></i> Resume`;
+                document.getElementById('autoplay-status').innerText = "Auto Play Paused";
+            } else {
+                window.speechSynthesis.resume();
+                pauseBtn.innerHTML = `<i class="fa-solid fa-pause"></i> Pause`;
+                document.getElementById('autoplay-status').innerText = `Reciting Table of ${apTable}...`;
+            }
+        }
+
+        function stopAutoPlay() {
+            autoPlayActive = false;
+            autoPlayPaused = false;
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            resetAutoPlayUI();
+        }
+
+        function resetAutoPlayUI() {
+            const playBtn = document.getElementById('btn-ap-play');
+            const pauseBtn = document.getElementById('btn-ap-pause');
+            const stopBtn = document.getElementById('btn-ap-stop');
+            
+            if (playBtn) {
+                playBtn.disabled = false;
+                playBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+            if (pauseBtn) {
+                pauseBtn.disabled = true;
+                pauseBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                pauseBtn.innerHTML = `<i class="fa-solid fa-pause"></i> Pause`;
+            }
+            if (stopBtn) {
+                stopBtn.disabled = true;
+                stopBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+            const statusEl = document.getElementById('autoplay-status');
+            if (statusEl) statusEl.innerText = "Ready to recite tables";
+        }
+
+        function reciteNextAutoPlayLine() {
+            if (!autoPlayActive || autoPlayPaused) return;
+
+            if (apTable > endNum) {
+                document.getElementById('autoplay-status').innerText = "Auto Play Completed!";
+                stopAutoPlay();
+                return;
+            }
+
+            const multWord = getMultiplierWord(apMultiplier);
+            const lineText = `${apTable} ${multWord} are ${apTable * apMultiplier}`;
+            document.getElementById('autoplay-status').innerText = `Reciting: ${apTable} × ${apMultiplier} = ${apTable * apMultiplier}`;
+
+            const utterance = new SpeechSynthesisUtterance(lineText);
+            
+            // Apply speed setting from 0.25x to 3x
+            const speedSelect = document.getElementById('autoplay-speed-select');
+            utterance.rate = speedSelect ? parseFloat(speedSelect.value) : 1.0;
+
+            const voiceSelect = document.getElementById('voice-select');
+            if (voiceSelect && voiceSelect.value !== "") {
+                const selectedVoice = availableVoices[parseInt(voiceSelect.value)];
+                if (selectedVoice) {
+                    utterance.voice = selectedVoice;
+                }
+            }
+
+            utterance.onend = () => {
+                if (!autoPlayActive) return;
+                apMultiplier++;
+                if (apMultiplier > 10) {
+                    apMultiplier = 1;
+                    apTable++;
+                }
+                setTimeout(() => {
+                    if (autoPlayActive && !autoPlayPaused) {
+                        reciteNextAutoPlayLine();
+                    }
+                }, 300);
+            };
+            utterance.onerror = () => {
+                stopAutoPlay();
+            };
+            window.speechSynthesis.speak(utterance);
+        }
+
+        // --- GAME MODE & VARIANTS (Featuring Animals & Vehicles) ---
+        let gameScoreVal = 0;
+        let gameLivesVal = 3;
+        let currentGameFactor1 = 2;
+        let currentGameFactor2 = 2;
+        let isPaused = false;
+        let flashTimerInterval = null;
+
+        function setGameVariant(variant) {
+            currentGameVariant = variant;
+            ['balloon', 'dragdrop', 'flash'].forEach(v => {
+                const btn = document.getElementById(`gvar-${v}`);
+                if (v === variant) {
+                    btn.className = "px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow";
+                } else {
+                    btn.className = "px-3 py-1.5 rounded-lg text-xs font-bold text-indigo-700 hover:bg-indigo-100";
+                }
+            });
+
+            const titleH = document.getElementById('game-title-header');
+            const descH = document.getElementById('game-desc-header');
+            if (variant === 'balloon') {
+                titleH.innerText = "Safari Animal Balloon Pop!";
+                descH.innerText = "Pop the correct floating balloon with wild animals to solve equations!";
+            } else if (variant === 'dragdrop') {
+                titleH.innerText = "Vehicle Garage Drag & Drop!";
+                descH.innerText = "Drag the correct transport vehicle answer chip into the garage!";
+            } else if (variant === 'flash') {
+                titleH.innerText = "Zoo & Track Multiple Choice Rush!";
+                descH.innerText = "Lightning-fast multiple choice questions with animals and vehicles ticking down!";
+            }
+            resetGameUI();
+        }
+
+        function resetGameUI() {
+            if (flashTimerInterval) clearInterval(flashTimerInterval);
+            document.getElementById('game-balloon-content').classList.add('hidden');
+            document.getElementById('game-dragdrop-content').classList.add('hidden');
+            document.getElementById('game-flash-content').classList.add('hidden');
+            document.getElementById('game-input-area').classList.add('hidden');
+            document.getElementById('game-start-screen').classList.remove('hidden');
+        }
+
+        function startGameSession() {
+            document.getElementById('game-start-screen').classList.add('hidden');
+            gameScoreVal = 0;
+            gameLivesVal = 3;
+            updateGameStats();
+            initCurrentGameVariant();
+        }
+
+        function updateGameStats() {
+            document.getElementById('game-score').innerText = gameScoreVal;
+            document.getElementById('game-lives').innerText = '❤️'.repeat(gameLivesVal);
+        }
+
+        function initCurrentGameVariant() {
+            if (gameLivesVal <= 0) {
+                endGameSession();
+                return;
+            }
+
+            currentGameFactor1 = Math.floor(Math.random() * (endNum - startNum + 1)) + startNum;
+            currentGameFactor2 = Math.floor(Math.random() * 10) + 1; // Max factor 10
+
+            if (currentGameVariant === 'balloon') {
+                document.getElementById('game-balloon-content').classList.remove('hidden');
+                document.getElementById('game-input-area').classList.add('hidden');
+                
+                const randomAnimal = safariAnimals[Math.floor(Math.random() * safariAnimals.length)];
+                document.getElementById('safari-animal-icon').innerText = randomAnimal;
+                document.getElementById('balloon-prompt-eq').innerText = `${currentGameFactor1} × ${currentGameFactor2} = ?`;
+                
+                const grid = document.getElementById('balloon-grid');
+                grid.innerHTML = '';
+                let correctAns = currentGameFactor1 * currentGameFactor2;
+                let options = [correctAns];
+                while(options.length < 4) {
+                    let offset = Math.floor(Math.random() * 10) - 5;
+                    let wrong = correctAns + offset;
+                    if(wrong > 0 && !options.includes(wrong)) options.push(wrong);
+                }
+                options.sort(() => Math.random() - 0.5);
+
+                options.forEach(opt => {
+                    let btn = document.createElement('button');
+                    let animalTag = safariAnimals[Math.floor(Math.random() * safariAnimals.length)];
+                    btn.className = "bg-gradient-to-br from-pink-400 to-purple-500 hover:from-pink-500 hover:to-purple-600 text-white font-black text-xl py-4 rounded-full shadow-lg border-2 border-white animate-float transition-all transform hover:scale-105 flex flex-col items-center justify-center";
+                    btn.innerHTML = `<span>${animalTag}</span><span>${opt}</span>`;
+                    btn.onclick = (e) => popBalloon(btn, opt, correctAns);
+                    grid.appendChild(btn);
+                });
+
+            } else if (currentGameVariant === 'dragdrop') {
+                document.getElementById('game-dragdrop-content').classList.remove('hidden');
+                document.getElementById('game-input-area').classList.add('hidden');
+                
+                const randomVehicle = transportVehicles[Math.floor(Math.random() * transportVehicles.length)];
+                document.getElementById('vehicle-icon-display').innerText = randomVehicle;
+                document.getElementById('drag-prompt-eq').innerText = `${currentGameFactor1} × ${currentGameFactor2} = ?`;
+                document.getElementById('drop-zone').innerText = "[Drop Vehicle Chip Here]";
+                
+                const sourceContainer = document.getElementById('drag-source-container');
+                sourceContainer.innerHTML = '';
+                
+                let correctAns = currentGameFactor1 * currentGameFactor2;
+                let options = [correctAns];
+                while(options.length < 4) {
+                    let offset = Math.floor(Math.random() * 10) - 5;
+                    let wrong = correctAns + offset;
+                    if(wrong > 0 && !options.includes(wrong)) options.push(wrong);
+                }
+                options.sort(() => Math.random() - 0.5);
+
+                options.forEach(opt => {
+                    let vIcon = transportVehicles[Math.floor(Math.random() * transportVehicles.length)];
+                    let chip = document.createElement('div');
+                    chip.className = "bg-indigo-600 hover:bg-indigo-700 text-white font-black text-lg px-4 py-3 rounded-2xl shadow cursor-grab flex items-center gap-2";
+                    chip.draggable = true;
+                    chip.innerHTML = `<span>${vIcon}</span><span>${opt}</span>`;
+                    chip.id = `chip-${opt}`;
+                    chip.ondragstart = (e) => {
+                        e.dataTransfer.setData("text/plain", opt);
+                    };
+                    sourceContainer.appendChild(chip);
+                });
+
+            } else if (currentGameVariant === 'flash') {
+                document.getElementById('game-flash-content').classList.remove('hidden');
+                document.getElementById('game-input-area').classList.add('hidden');
+                
+                const randomRushIcon = Math.random() > 0.5 ? safariAnimals[Math.floor(Math.random() * safariAnimals.length)] : transportVehicles[Math.floor(Math.random() * transportVehicles.length)];
+                document.getElementById('rush-icon').innerText = randomRushIcon;
+                document.getElementById('flash-prompt-eq').innerText = `${currentGameFactor1} × ${currentGameFactor2} = ?`;
+
+                const correctAns = currentGameFactor1 * currentGameFactor2;
+                const flashGrid = document.getElementById('flash-options-grid');
+                flashGrid.innerHTML = '';
+
+                let options = [correctAns];
+                while(options.length < 4) {
+                    let offset = Math.floor(Math.random() * 10) - 5;
+                    let wrong = correctAns + offset;
+                    if(wrong > 0 && !options.includes(wrong)) options.push(wrong);
+                }
+                options.sort(() => Math.random() - 0.5);
+
+                options.forEach(opt => {
+                    let btn = document.createElement('button');
+                    btn.className = "bg-white hover:bg-indigo-50 border-2 border-indigo-200 text-indigo-950 font-black text-lg py-2.5 rounded-xl shadow transition-all transform hover:scale-105";
+                    btn.innerText = opt;
+                    btn.onclick = () => submitFlashChoice(opt, correctAns);
+                    flashGrid.appendChild(btn);
+                });
+
+                if (flashTimerInterval) clearInterval(flashTimerInterval);
+                let speedVal = parseInt(document.getElementById('game-speed').value);
+                let maxTimeMs = Math.max(2500, 8000 - speedVal * 1000);
+                let startTime = Date.now();
+                
+                flashTimerInterval = setInterval(() => {
+                    if(isPaused) return;
+                    let elapsed = Date.now() - startTime;
+                    let pct = Math.max(0, 100 - (elapsed / maxTimeMs) * 100);
+                    document.getElementById('flash-timer-bar').style.width = `${pct}%`;
+                    
+                    if(elapsed >= maxTimeMs) {
+                        clearInterval(flashTimerInterval);
+                        gameLivesVal--;
+                        updateGameStats();
+                        playSound('error');
+                        speakText("Time's up!");
+                        if (gameLivesVal <= 0) {
+                            endGameSession();
+                        } else {
+                            initCurrentGameVariant();
+                        }
+                    }
+                }, 50);
+            }
+        }
+
+        // Balloon Pop Logic with Sound Effects & Burst Animation
+        function popBalloon(element, selected, correct) {
+            if (selected === correct) {
+                element.classList.add('animate-pop');
+                gameScoreVal += 10;
+                playSound('success');
+                playSound('animal');
+                speakText("Balloon popped! Correct!", true);
+                setTimeout(() => {
+                    initCurrentGameVariant();
+                }, 400);
+            } else {
+                gameLivesVal--;
+                playSound('error');
+                speakText("Wrong balloon popped!");
+                element.style.opacity = "0.4";
+                element.disabled = true;
+                if (gameLivesVal <= 0) {
+                    endGameSession();
+                }
+            }
+            updateGameStats();
+        }
+
+        // Drag and Drop Handlers
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function dropAnswer(ev) {
+            ev.preventDefault();
+            const data = parseInt(ev.dataTransfer.getData("text/plain"));
+            const correctAns = currentGameFactor1 * currentGameFactor2;
+            
+            if (data === correctAns) {
+                gameScoreVal += 10;
+                playSound('success');
+                playSound('vehicle');
+                speakText("Perfect garage drop! Correct!", true);
+                initCurrentGameVariant();
+            } else {
+                gameLivesVal--;
+                playSound('error');
+                speakText("Incorrect garage drop!");
+                if (gameLivesVal <= 0) {
+                    endGameSession();
+                }
+            }
+            updateGameStats();
+        }
+
+        // Zoo and Track Multiple Choice Choice Handler
+        function submitFlashChoice(selected, correct) {
+            if (flashTimerInterval) clearInterval(flashTimerInterval);
+            if (selected === correct) {
+                gameScoreVal += 10;
+                playSound('success');
+                playSound('animal');
+                speakText("Correct!", true);
+                initCurrentGameVariant();
+            } else {
+                gameLivesVal--;
+                playSound('error');
+                speakText("Wrong choice!");
+                if (gameLivesVal <= 0) {
+                    endGameSession();
+                } else {
+                    initCurrentGameVariant();
+                }
+            }
+            updateGameStats();
+        }
+
+        function toggleGamePause() {
+            isPaused = !isPaused;
+            const btn = document.getElementById('btn-pause');
+            if (isPaused) {
+                btn.innerHTML = `<i class="fa-solid fa-play"></i> Resume`;
+                btn.className = "bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg text-xs font-bold shadow";
+            } else {
+                btn.innerHTML = `<i class="fa-solid fa-pause"></i> Pause`;
+                btn.className = "bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow";
+            }
+        }
+
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    alert(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        function endGameSession() {
+            if (flashTimerInterval) clearInterval(flashTimerInterval);
+            document.getElementById('game-balloon-content').classList.add('hidden');
+            document.getElementById('game-dragdrop-content').classList.add('hidden');
+            document.getElementById('game-flash-content').classList.add('hidden');
+            document.getElementById('game-input-area').classList.add('hidden');
+            
+            const startScreen = document.getElementById('game-start-screen');
+            startScreen.classList.remove('hidden');
+            startScreen.innerHTML = `
+                <h3 class="text-3xl font-black text-red-600 mb-2">Safari Game Over!</h3>
+                <p class="text-xl font-bold text-gray-700 mb-4">Your Final Score: ${gameScoreVal}</p>
+                <button onclick="startGameSession()" class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-8 py-3 rounded-2xl font-extrabold text-lg shadow-lg hover:scale-105 transition-all">
+                    Play Again
+                </button>
+            `;
+            playSound('error');
+            speakText(`Game over. You scored ${gameScoreVal} points.`);
+        }
+
+        // --- QUIZ MODE (Max Multiplier 10) ---
+        let quizQuestions = [];
+        let currentQuizIndex = 0;
+        let quizScore = 0;
+        let currentCorrectAnswer = 0;
+
+        function startQuiz() {
+            quizQuestions = [];
+            quizScore = 0;
+            currentQuizIndex = 0;
+            document.getElementById('quiz-results').classList.add('hidden');
+            document.getElementById('quiz-card').classList.remove('hidden');
+
+            for (let i = 0; i < 10; i++) {
+                const type = i >= 5 ? 'advanced' : 'standard';
+                let f1 = Math.floor(Math.random() * (endNum - startNum + 1)) + startNum;
+                let f2 = Math.floor(Math.random() * 10) + 1; // Strict rule: multiply by max 10
+                
+                if (type === 'standard') {
+                    quizQuestions.push({
+                        qText: `${f1} × ${f2} = ?`,
+                        ans: f1 * f2,
+                        hint: "Standard multiplication (up to 10)"
+                    });
+                } else {
+                    const missingFirst = Math.random() > 0.5;
+                    if (missingFirst) {
+                        quizQuestions.push({
+                            qText: `? × ${f2} = ${f1 * f2}`,
+                            ans: f1,
+                            hint: "Advanced Challenge: Find the missing multiplier!"
+                        });
+                    } else {
+                        quizQuestions.push({
+                            qText: `${f1} × ? = ${f1 * f2}`,
+                            ans: f2,
+                            hint: "Advanced Challenge: Find the missing multiplier!"
+                        });
+                    }
+                }
+            }
+            loadQuizQuestion();
+        }
+
+        function loadQuizQuestion() {
+            if (currentQuizIndex >= quizQuestions.length) {
+                showQuizResults();
+                return;
+            }
+            const q = quizQuestions[currentQuizIndex];
+            currentCorrectAnswer = q.ans;
+            document.getElementById('quiz-q-num').innerText = currentQuizIndex + 1;
+            document.getElementById('quiz-question-text').innerText = q.qText;
+            document.getElementById('quiz-hint-type').innerText = q.hint;
+            document.getElementById('quiz-text-input').value = '';
+
+            const optionsContainer = document.getElementById('quiz-options-container');
+            optionsContainer.innerHTML = '';
+            
+            let options = [q.ans];
+            while(options.length < 4) {
+                let offset = Math.floor(Math.random() * 10) - 5;
+                let wrongAns = q.ans + offset;
+                if (wrongAns > 0 && !options.includes(wrongAns)) {
+                    options.push(wrongAns);
+                }
+            }
+            options.sort(() => Math.random() - 0.5);
+
+            options.forEach(opt => {
+                let btn = document.createElement('button');
+                btn.className = "bg-indigo-50 hover:bg-indigo-600 hover:text-white border-2 border-indigo-200 text-indigo-900 font-extrabold text-xl py-3 rounded-2xl transition-all shadow";
+                btn.innerText = opt;
+                btn.onclick = () => checkQuizAnswer(opt);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function submitQuizTextAnswer() {
+            const val = parseInt(document.getElementById('quiz-text-input').value);
+            if (!isNaN(val)) {
+                checkQuizAnswer(val);
+            } else {
+                speakText("Please enter or speak a valid number.");
+            }
+        }
+
+        function checkQuizAnswer(selectedAns) {
+            if (selectedAns === currentCorrectAnswer) {
+                quizScore++;
+                playSound('success');
+                speakText("Fantastic! Excellent job!", true);
+            } else {
+                playSound('error');
+                speakText(`Not quite right. The correct answer was ${currentCorrectAnswer}.`);
+            }
+            currentQuizIndex++;
+            loadQuizQuestion();
+        }
+
+        function showQuizResults() {
+            document.getElementById('quiz-card').classList.add('hidden');
+            document.getElementById('quiz-results').classList.remove('hidden');
+            document.getElementById('quiz-final-score').innerText = `You scored ${quizScore} out of ${quizQuestions.length}!`;
+            playSound('success');
+            speakText(`Quiz complete! You scored ${quizScore} out of ${quizQuestions.length}. Well done!`, true);
+        }
+
+        // Initialize application on load
+        window.onload = function() {
+            renderNormalTables();
+        };
+    </script>
+</body>
+</html>

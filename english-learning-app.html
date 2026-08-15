@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>English Mastery Pro — Interactive Learning Game</title>
+<style>
+:root{--bg:#07111f;--panel:#0d1b2e;--panel2:#12243c;--text:#eef6ff;--muted:#9db0c7;--a:#6d7cff;--b:#9b5cff;--good:#20d38a;--bad:#ff6577;--gold:#ffd166;--line:#203653}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Segoe UI,sans-serif;background:radial-gradient(circle at top,#162b4a,#07111f 55%);color:var(--text);min-height:100vh}
+button,input,textarea,select{font:inherit}button{cursor:pointer;border:0;border-radius:12px;padding:11px 15px;font-weight:750;color:white;background:linear-gradient(135deg,var(--a),var(--b));box-shadow:0 5px 15px #0004}button.secondary{background:#1a2d48;border:1px solid var(--line)}button.good{background:#087f59}button.danger{background:#8d2635}
+header{position:sticky;top:0;z-index:20;background:#081526eF;backdrop-filter:blur(14px);border-bottom:1px solid var(--line);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:15px}
+.logo{font-size:20px;font-weight:900}.logo span{color:#9da8ff}.hud{display:flex;gap:8px;flex-wrap:wrap}.pill{background:#132641;border:1px solid var(--line);padding:7px 11px;border-radius:999px;font-size:13px}.gold{color:var(--gold)}
+.layout{display:grid;grid-template-columns:235px 1fr;min-height:calc(100vh - 70px)}
+aside{padding:15px;background:#081322;border-right:1px solid var(--line);position:sticky;top:70px;height:calc(100vh - 70px);overflow:auto}
+nav button{display:block;width:100%;text-align:left;background:transparent;box-shadow:none;margin:4px 0;color:#b9c8da}nav button:hover,nav button.active{background:#182c4a;color:white}
+main{padding:25px;max-width:1500px;width:100%;margin:auto}.view{display:none}.view.active{display:block}
+.card{background:linear-gradient(145deg,#0f2036,#0b192b);border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:17px;box-shadow:0 15px 45px #0003}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:15px}
+h1,h2,h3{margin-top:0}.muted{color:var(--muted)}.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.actions{display:flex;gap:8px;flex-wrap:wrap}
+.metric{font-size:30px;font-weight:900}.progress{height:9px;background:#1b2d46;border-radius:20px;overflow:hidden}.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--a),var(--b));border-radius:20px}
+.levelbar{height:13px}.tag{display:inline-block;padding:5px 9px;border-radius:999px;background:#1a2d50;color:#bfc9ff;font-size:12px;font-weight:800}
+.game{position:relative;height:590px;overflow:hidden;border-radius:18px;background:linear-gradient(#07101e,#102747);border:1px solid #29486e}.game.full{position:fixed;inset:0;z-index:1000;height:100vh;border-radius:0}
+.gameTop{position:absolute;z-index:4;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;gap:8px}.fly{position:absolute;z-index:2;left:50%;transform:translateX(-50%);bottom:-100px;text-align:center;animation:rise var(--dur) linear forwards;pointer-events:none}.fly .en{font-size:34px;font-weight:950;text-shadow:0 3px 12px #000}.fly .hi{font-size:21px;color:#d9e5f7;margin-top:4px}.fly .ex{font-size:15px;color:#9fc0e9;margin-top:4px}@keyframes rise{from{bottom:-110px;opacity:0}8%{opacity:1}92%{opacity:1}to{bottom:105%;opacity:0}}
+.gameControls{position:absolute;bottom:14px;left:14px;right:14px;z-index:5;display:flex;justify-content:center;gap:10px;flex-wrap:wrap}.choice{background:#10253f;border:1px solid #315074;padding:12px 18px;border-radius:13px;min-width:150px}
+.word{font-size:44px;font-weight:950}.meaning{font-size:23px;color:#c2d1e4}.sentence{font-size:19px;line-height:1.55}
+.quiz button{display:block;width:100%;text-align:left;margin:8px 0;background:#112640;border:1px solid #294665}.correct{background:#075b42!important;border-color:#20d38a!important}.wrong{background:#682536!important;border-color:#ff6577!important}
+input,textarea,select{background:#09182a;color:white;border:1px solid #29435f;border-radius:11px;padding:11px;width:100%}textarea{min-height:150px;resize:vertical}
+.chat{height:370px;overflow:auto;padding:12px;background:#071423;border-radius:14px}.bubble{max-width:82%;padding:11px 14px;border-radius:14px;margin:8px 0}.ai{background:#172e4d}.me{background:#07563f;margin-left:auto}
+.choiceGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.voiceRow{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:end}.voiceInfo{padding:11px 13px;background:#0a1b2e;border:1px solid var(--line);border-radius:11px;color:var(--muted);font-size:13px}.choiceGrid button{text-align:left;background:#112640;border:1px solid #294665}
+.ach{padding:12px;border:1px solid var(--line);border-radius:12px}.locked{opacity:.42}
+table{width:100%;border-collapse:collapse}td,th{padding:11px;border-bottom:1px solid var(--line);text-align:left}
+.toast{position:fixed;right:20px;bottom:20px;z-index:2000;background:#102941;border:1px solid #42658c;padding:13px 17px;border-radius:12px;box-shadow:0 15px 40px #0007;display:none}
+@media(max-width:950px){.layout{grid-template-columns:1fr}aside{height:auto;position:sticky;top:69px;z-index:15;display:flex;overflow:auto;gap:5px}nav{display:flex;gap:5px}nav button{white-space:nowrap;width:auto}.grid{grid-template-columns:repeat(2,1fr)}.choiceGrid{grid-template-columns:1fr 1fr}}
+@media(max-width:600px){main{padding:12px}.grid,.grid2,.choiceGrid{grid-template-columns:1fr}.game{height:calc(100vh - 180px)}.word{font-size:35px}}
+</style>
+</head>
+<body>
+<header>
+ <div class="logo">🚀 English <span>Mastery PRO</span></div>
+ <div class="hud">
+  <button onclick="location.href='index.html'">🏠 Home</button>
+  <div class="pill">⭐ XP <b id="xp">0</b></div><div class="pill gold">🪙 <b id="coins">50</b></div>
+  <div class="pill">🔥 <b id="streak">1</b> day</div><div class="pill">🏆 Lv <b id="playerLevel">1</b></div>
+ </div>
+</header>
+<div class="layout">
+<aside><nav>
+<button class="active" data-v="home">🏠 Home</button><button data-v="game">🎮 Flying Words Game</button>
+<button data-v="vocab">📚 Vocabulary</button><button data-v="grammar">📘 Grammar</button>
+<button data-v="listen">🎧 Listening</button><button data-v="read">📖 Reading</button>
+<button data-v="speak">🗣️ Speaking</button><button data-v="write">✍️ Writing</button>
+<button data-v="chat">🤖 AI Teacher</button><button data-v="role">🎭 Role-play</button>
+<button data-v="mistakes">📝 Mistakes</button><button data-v="test">🧪 Weekly Test</button>
+<button data-v="progress">📈 Progress</button><button data-v="settings">⚙️ Settings</button>
+</nav></aside>
+<main>
+
+<section id="home" class="view active">
+ <div class="card"><div class="row"><div><span class="tag">PERSONAL ENGLISH COACH</span><h1 id="welcome">Build English confidence every day.</h1><p class="muted">Your goal: learn → use → get corrected → repeat.</p></div><button onclick="show('game')">🎮 Play & Learn</button></div></div>
+ <div class="grid">
+  <div class="card"><div class="muted">CEFR Level</div><div class="metric" id="cefr">A1</div><div class="progress"><i id="cefrBar" style="width:25%"></i></div></div>
+  <div class="card"><div class="muted">Today's XP</div><div class="metric" id="todayXP">0</div><p class="muted">Target: 100 XP</p></div>
+  <div class="card"><div class="muted">Words learned</div><div class="metric" id="learned">0</div><p class="muted">10 words/day target</p></div>
+  <div class="card"><div class="muted">Accuracy</div><div class="metric" id="accuracy">0%</div><p class="muted">Keep practicing</p></div>
+ </div>
+ <div class="grid2">
+  <div class="card"><h3>🎯 Today's Mission</h3><div id="mission"></div></div>
+  <div class="card"><h3>🏅 Achievements</h3><div id="achievements"></div></div>
+ </div>
+ <div class="card"><h3>Four-Skill Dashboard</h3><div id="skills"></div></div>
+</section>
+
+<section id="game" class="view">
+  <div class="row"><div><h2>🎮 Flying Words — Learn in Game Mode</h2><p class="muted">Words fly from bottom to top. Click the correct meaning before the word reaches the top.</p></div>
+    <div class="actions"><button class="secondary" onclick="toggleFull()">⛶ Fullscreen</button><button onclick="startGame()">▶ Start / Restart</button></div>
+  </div>
+  <div class="card" style="padding:12px 16px">
+    <div class="row"><div><b>Game speed</b> <span class="muted" id="speedLabel">Normal</span></div>
+    <input id="gameSpeed" type="range" min="1" max="10" value="5" style="max-width:280px" oninput="setGameSpeed(this.value)"></div>
+  </div>
+  <div id="gameBox" class="game">
+   <div class="gameTop">
+    <span class="pill">⭐ Score: <b id="gameScore">0</b></span><span class="pill">❤️ Lives: <b id="lives">❤️❤️❤️</b></span>
+    <span class="pill">🔄 Round: <b id="round">0</b></span><span class="pill">⏱️ <b id="gameTime">—</b></span>
+    <button class="secondary" onclick="pauseGame()" id="pauseGameBtn">⏸ Pause</button>
+   </div>
+   <div id="gameIntro" style="position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;background:#07111f99">
+    <div class="card" style="max-width:520px"><h2>🎮 Ready?</h2><p class="muted">Start the game, then click the correct Hindi meaning. Your selected English accent is used for pronunciation.</p><button onclick="startGame()">▶ Start Game</button></div>
+   </div>
+   <div id="flying"></div>
+   <div id="gameQuestion" style="position:absolute;top:95px;left:0;right:0;text-align:center;font-size:20px;color:#b8c9dd;z-index:2"></div>
+   <div id="gameChoices" class="gameControls"></div>
+  </div>
+</section>
+
+<section id="vocab" class="view">
+ <h2>📚 Vocabulary Lab</h2><div class="card"><div class="row"><div><span class="tag">A1–A2</span><div class="word" id="vw"></div><div class="meaning" id="vm"></div></div><div class="actions"><button onclick="speakWord()">🔊</button><button onclick="markKnown()">✅ I know it</button><button class="secondary" onclick="nextVocab()">Next</button></div></div><p id="vphrase" class="sentence"></p><p class="muted">Spaced review: today → tomorrow → 3 days → 7 days → 14 days → 30 days.</p></div>
+ <div class="card"><h3>Phrase Builder</h3><p>Learn <b>decision</b> as a useful family: <b>make a decision</b> · <b>difficult decision</b> · <b>final decision</b> · <b>make the right decision</b>.</p></div>
+</section>
+
+<section id="grammar" class="view">
+ <h2>📘 Grammar Coach</h2><div class="card"><span class="tag">Hindi → English</span><h3>Present Perfect</h3><p>इसका इस्तेमाल ऐसे काम के लिए किया जाता है जो अभी-अभी पूरा हुआ है या जिसका result अभी relevant है।</p><p><b>I have finished my work.</b><br><b>She has gone home.</b><br><b>They have completed the project.</b></p><button onclick="grammarPractice()">Practice +20 XP</button><div id="grammarQ"></div></div>
+ <div class="card"><h3>Grammar Roadmap</h3><p>Pronouns → am/is/are → have/has → Simple Present → Present Continuous → Simple Past → Future → Questions → Negatives → Articles → Prepositions → Modals → Comparatives → Conjunctions → Conditionals → Passive Voice → Reported Speech → Relative Clauses → Advanced Structures.</p></div>
+</section>
+
+<section id="listen" class="view">
+ <h2>🎧 Listening Lab</h2><div class="card"><h3>Listen → Understand → Transcript → Repeat</h3><p id="audioText">I was supposed to meet him yesterday, but he didn't show up.</p><div class="actions"><button onclick="speak(audioText.innerText)">▶ Play</button><button class="secondary" onclick="speak(audioText.innerText)">🔁 Replay</button></div><hr><p><b>was supposed to</b> = expected/planned to · <b>show up</b> = arrive/appear.</p><div class="quiz"><p>When was the meeting supposed to happen?</p><button onclick="answer(this,true)">Yesterday</button><button onclick="answer(this,false)">Tomorrow</button></div><div id="listenFeedback"></div></div></section>
+
+<section id="read" class="view">
+ <h2>📖 Reading Lab</h2><div class="card"><span class="tag">A1–A2</span><h3>A Simple Day</h3><p>Rahul wakes up early every morning. He drinks water, eats breakfast and walks to the bus stop. He enjoys reading short stories on the way to college. Today, he is carrying a new book because he wants to improve his English.</p><div class="quiz"><p>Why is Rahul carrying a new book?</p><button onclick="answer(this,true)">Because he wants to improve his English.</button><button onclick="answer(this,false)">Because he wants to buy a bus.</button></div></div></section>
+
+<section id="speak" class="view">
+ <h2>🗣️ Speaking Studio</h2><div class="card"><h3>30-second challenge</h3><p>Talk about your name, where you live, what you do, what you like and your English goal.</p><div class="actions"><button onclick="startSpeech()">🎙️ Speak now</button><button class="secondary" onclick="speak('My name is Rahul. I live in India. I am learning English because I want to communicate confidently.')">🔊 Model</button></div><p id="speechStatus" class="muted"></p><div id="speechOut"></div></div>
+ <div class="card"><h3>Speaking score</h3><div id="speakingBars"></div></div>
+</section>
+
+<section id="write" class="view">
+ <h2>✍️ Writing Coach</h2><div class="card"><h3>Write about your day</h3><textarea id="writer" placeholder="Write 80–100 words..."></textarea><div class="actions"><button onclick="checkWriting()">Check & Learn +25 XP</button><button class="secondary" onclick="document.getElementById('writer').value=''">Clear</button></div><div id="writeFeedback"></div></div></section>
+
+<section id="chat" class="view">
+ <h2>🤖 AI Conversation Teacher</h2><div class="card"><div class="chat" id="chatbox"><div class="bubble ai"><b>Teacher:</b> What did you do yesterday?</div></div><div class="actions" style="margin-top:10px"><input id="chatInput" placeholder="Type your answer..." onkeydown="if(event.key==='Enter')sendChat()"><button onclick="sendChat()">Send</button><button class="secondary" onclick="speak('What did you do yesterday?')">🔊</button></div></div>
+</section>
+
+<section id="role" class="view">
+ <h2>🎭 Real-life Role-play</h2><div class="choiceGrid">
+ <button onclick="roleplay('restaurant')">🍽️ Restaurant<br><small>Order food & ask for bill</small></button>
+ <button onclick="roleplay('shop')">🛍️ Shop<br><small>Ask price & negotiate</small></button>
+ <button onclick="roleplay('station')">🚉 Railway Station<br><small>Buy a ticket</small></button>
+ <button onclick="roleplay('interview')">💼 Job Interview<br><small>Introduce yourself</small></button>
+ <button onclick="roleplay('office')">🏢 Office Meeting<br><small>Give your opinion</small></button>
+ <button onclick="roleplay('presentation')">🎤 Presentation<br><small>Speak professionally</small></button>
+ </div><div class="card" id="roleBox"><p class="muted">Choose a scenario to begin.</p></div>
+</section>
+
+<section id="mistakes" class="view">
+ <h2>📝 Mistake Notebook</h2><div class="card"><p>Your repeated mistakes become targeted practice.</p><table><tr><th>Area</th><th>Count</th><th>Action</th></tr><tr><td>Past tense</td><td>14</td><td>Practice Simple Past</td></tr><tr><td>Articles</td><td>11</td><td>Practice a/an/the</td></tr><tr><td>Prepositions</td><td>9</td><td>Practice in/on/at</td></tr><tr><td>Subject–verb agreement</td><td>7</td><td>Practice sentences</td></tr></table></div></section>
+
+<section id="test" class="view">
+ <h2>🧪 Weekly Test</h2><div class="card"><p>Test yourself across vocabulary, grammar, reading, listening, speaking and writing.</p><button onclick="weeklyTest()">Start weekly test</button><div id="testArea"></div></div></section>
+
+<section id="progress" class="view">
+ <h2>📈 Your Progress</h2><div class="grid"><div class="card"><div class="metric" id="pXP">0</div><p>Total XP</p></div><div class="card"><div class="metric" id="pWords">0</div><p>Words mastered</p></div><div class="card"><div class="metric" id="pGames">0</div><p>Games played</p></div><div class="card"><div class="metric" id="pTests">0</div><p>Tests completed</p></div></div><div class="card"><h3>CEFR Journey</h3><p>A1 → A2 → B1 → B2 → C1 → C2</p><div class="progress levelbar"><i id="journey" style="width:12%"></i></div></div></section>
+
+<section id="settings" class="view"><h2>⚙️ Settings</h2>
+<div class="card"><h3>🎙️ Voice & Accent</h3>
+<p class="muted">Choose the pronunciation accent used for vocabulary, listening, game mode, role-play, AI Teacher and model speech.</p>
+<div class="voiceRow">
+  <div><label for="accentSelect">English accent</label>
+    <select id="accentSelect" onchange="changeAccent(this.value)">
+      <option value="en-IN">🇮🇳 Indian English</option>
+      <option value="en-US">🇺🇸 American English</option>
+      <option value="en-GB">🇬🇧 British English</option>
+    </select>
+  </div>
+  <button class="secondary" onclick="testVoice()">🔊 Test selected voice</button>
+</div>
+<p id="voiceInfo" class="voiceInfo" style="margin-top:12px">Selected: Indian English</p>
+</div>
+<div class="card"><h3>🖥️ Local Computer Compatibility</h3>
+<p class="muted">This application is designed to run directly from the downloaded HTML file. It uses only built-in browser features and local storage; no server or internet connection is required for the core lessons and game.</p>
+<div class="actions">
+<button class="secondary" onclick="runDiagnostics()">🔍 Check Browser</button>
+<button class="secondary" onclick="clearLocalData()">🧹 Clear App Data</button>
+</div>
+<div id="diagnostics" class="muted" style="margin-top:12px"></div></div>
+<div class="card"><h3>Personalisation</h3><label>Your name</label><input id="nameInput" placeholder="Enter your name"><br><br><button onclick="saveName()">Save name</button><button class="danger" style="margin-left:8px" onclick="resetProgress()">Reset progress</button></div></section>
+
+</main></div>
+<div id="toast" class="toast"></div><div id="localStatus" style="position:fixed;left:12px;bottom:12px;z-index:1999;background:#0b1c30;border:1px solid #29435f;border-radius:12px;padding:10px 13px;color:#bcd0e5;font-size:12px;display:none"></div>
+
+<script>
+function localStatus(msg){
+ const el=document.getElementById("localStatus");
+ if(!el)return;
+ el.textContent=msg;el.style.display="block";
+ clearTimeout(localStatus._t);localStatus._t=setTimeout(()=>el.style.display="none",5000);
+}
+
+const words=[
+["purchase","खरीदना","purchase something","I purchased a new phone."],["eager","बहुत उत्सुक","eager to learn","I am eager to learn English."],
+["barrier","रुकावट","language barrier","Confidence can remove a language barrier."],["suppose","मान लेना / सोचना","I suppose","I suppose he is busy."],
+["untidy","अव्यवस्थित","an untidy room","His room is untidy."],["craving","तीव्र इच्छा","a craving for","I have a craving for sweets."],
+["breezy","ठंडी और सुखद हवा वाला","a breezy day","It is a breezy morning."],["pile","ढेर","a pile of books","There is a pile of books on the table."],
+["stranger","अजनबी","talk to a stranger","Don't share private information with a stranger."],["decision","निर्णय","make a decision","I need to make an important decision."]
+];
+let S=JSON.parse(localStorage.getItem("englishMasteryPro")||'{"xp":0,"coins":50,"streak":1,"words":0,"games":0,"tests":0,"correct":0,"attempts":0,"name":"","v":0,"accent":"en-IN"}');
+
+function save(){localStorage.setItem("englishMasteryPro",JSON.stringify(S));updateHUD()}
+function updateHUD(){
+ xp.textContent=S.xp; coins.textContent=S.coins; streak.textContent=S.streak;
+ playerLevel.textContent=Math.floor(S.xp/100)+1; learned.textContent=S.words;
+ todayXP.textContent=S.xp%100;
+ accuracy.textContent=(S.attempts?Math.round(S.correct/S.attempts*100):0)+"%";
+ pXP.textContent=S.xp;pWords.textContent=S.words;pGames.textContent=S.games;pTests.textContent=S.tests;
+ let lv=S.xp<300?"A1":S.xp<800?"A2":S.xp<1600?"B1":S.xp<2800?"B2":S.xp<4500?"C1":"C2";
+ cefr.textContent=lv;cefrBar.style.width=Math.min(100,25+(S.xp%300)/3)+"%";
+ journey.style.width=Math.min(100,12+S.xp/50)+"%";
+ welcome.textContent=S.name?`Welcome back, ${S.name}!`:"Build English confidence every day.";
+ mission.innerHTML=`<p>🎮 Play 5 rounds <b>+50 XP</b></p><p>📚 Learn 5 words <b>+25 XP</b></p><p>🗣️ Speak for 30 seconds <b>+25 XP</b></p>`;
+ achievements.innerHTML=`<div class="ach ${S.xp>=100?"":"locked"}">⭐ First 100 XP</div><br><div class="ach ${S.words>=10?"":"locked"}">📚 10 Words Mastered</div><br><div class="ach ${S.games>=1?"":"locked"}">🎮 First Game</div>`;
+ skills.innerHTML=["Reading","Listening","Speaking","Writing"].map((x,i)=>`<div class="row" style="margin:13px 0"><b>${x}</b><div style="width:70%"><div class="progress"><i style="width:${[45,30,22,40][i]+Math.min(30,S.xp/30)}%"></i></div></div><span>${[45,30,22,40][i]}%</span></div>`).join("");
+}
+function show(id){
+ document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));
+ const v=document.getElementById(id); if(v)v.classList.add("active");
+ document.querySelectorAll("nav button").forEach(x=>x.classList.toggle("active",x.dataset.v===id));
+ window.scrollTo(0,0);
+}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>show(b.dataset.v));
+function toast(t){
+ let x=document.getElementById("toast");x.textContent=t;x.style.display="block";
+ clearTimeout(x._timer);x._timer=setTimeout(()=>x.style.display="none",2200);
+}
+function addXP(n,msg){S.xp+=n;S.coins+=Math.ceil(n/10);save();toast(`+${n} XP${msg?" — "+msg:""}`)}
+
+function getVoice(){
+ if(!("speechSynthesis" in window))return null;
+ const voices=speechSynthesis.getVoices(),lang=S.accent||"en-IN";
+ return voices.find(v=>v.lang===lang) ||
+        voices.find(v=>v.lang&&v.lang.toLowerCase().startsWith(lang.slice(0,2).toLowerCase())) || null;
+}
+function speak(t){
+ if("speechSynthesis" in window && "SpeechSynthesisUtterance" in window){
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(t);u.lang=S.accent||"en-IN";
+  const v=getVoice();if(v)u.voice=v;u.rate=.95;speechSynthesis.speak(u);
+ }else toast("Text-to-speech is unavailable in this browser.");
+}
+function renderV(){
+ const w=words[S.v%words.length];
+ vw.textContent=w[0];vm.textContent=w[1];
+ vphrase.innerHTML=`<b>Phrase:</b> ${w[2]}<br><b>Example:</b> ${w[3]}`;
+}
+function nextVocab(){S.v=(S.v+1)%words.length;renderV()}
+function speakWord(){
+ const w=words[S.v%words.length];
+ speak(w[0]+". "+w[3]);
+}
+function markKnown(){S.words++;addXP(10,"word learned");nextVocab()}
+
+let gameTimer=null,gameWord=null,gameRound=0,gameLives=3,gameScoreValue=0,gameRunning=false,gamePaused=false,gameSpeedValue=5;
+
+function speedDuration(){return Math.max(4.2,13.5-gameSpeedValue*.85)}
+function setGameSpeed(v){
+ gameSpeedValue=Number(v);
+ const n=["","Very slow","Slow","Easy","Moderate","Normal","Fast","Faster","Very fast","Rapid","Extreme"];
+ speedLabel.textContent=n[gameSpeedValue]||"Normal";
+}
+function startGame(){
+ show("game"); clearTimeout(gameTimer); gameRound=0; gameLives=3; gameScoreValue=0; gameRunning=true; gamePaused=false;
+ gameScore.textContent=0; lives.textContent="❤️❤️❤️"; round.textContent=0; gameTime.textContent="—";
+ gameIntro.style.display="none"; pauseGameBtn.textContent="⏸ Pause"; S.games++; save(); nextGameRound();
+}
+function nextGameRound(){
+ if(!gameRunning||gamePaused)return;
+ clearTimeout(gameTimer);
+ if(gameLives<=0){endGame("Game over!");return}
+ gameRound++; round.textContent=gameRound; gameWord=words[Math.floor(Math.random()*words.length)];
+ const dur=speedDuration(), id="fly_"+Date.now();
+ flying.innerHTML=`<div id="${id}" class="fly" style="--dur:${dur}s"><div class="en">${esc(gameWord[0])}</div><div class="hi">${esc(gameWord[1])}</div><div class="ex">${esc(gameWord[2])}</div></div>`;
+ gameQuestion.textContent="Choose the correct Hindi meaning";
+ let opts=[gameWord[1]];
+ while(opts.length<3){let x=words[Math.floor(Math.random()*words.length)][1];if(!opts.includes(x))opts.push(x)}
+ opts.sort(()=>Math.random()-.5);
+ gameChoices.innerHTML=opts.map(o=>`<button class="choice" onclick="gameAnswer(this,${JSON.stringify(o===gameWord[1])})">${esc(o)}</button>`).join("");
+ gameTime.textContent=dur.toFixed(1)+"s"; speak(gameWord[0]);
+ gameTimer=setTimeout(missGameRound,dur*1000);
+}
+function missGameRound(){
+ if(!gameRunning||gamePaused)return; clearTimeout(gameTimer); gameLives--;
+ lives.textContent="❤️".repeat(Math.max(0,gameLives))+"🖤".repeat(3-gameLives); toast("⏰ Too slow!");
+ if(gameLives<=0){endGame("Out of lives!");return}
+ setTimeout(nextGameRound,450);
+}
+function gameAnswer(btn,ok){
+ if(!gameRunning||gamePaused)return; clearTimeout(gameTimer);
+ gameChoices.querySelectorAll("button").forEach(b=>b.disabled=true); S.attempts++;
+ if(ok){
+  S.correct++;S.xp+=15;S.coins+=2;gameScoreValue+=15;gameScore.textContent=gameScoreValue;
+  btn.classList.add("correct");toast("+15 XP — Correct!");speak("Correct! "+gameWord[0]);
+ }else{
+  S.xp=Math.max(0,S.xp-3);gameLives--;lives.textContent="❤️".repeat(Math.max(0,gameLives))+"🖤".repeat(3-gameLives);
+  btn.classList.add("wrong");
+  gameChoices.querySelectorAll("button").forEach(b=>{if(b.textContent===gameWord[1])b.classList.add("correct")});
+  toast("Not quite — the answer was "+gameWord[1]);
+ }
+ save(); if(gameLives<=0){setTimeout(()=>endGame("Out of lives!"),650);return} setTimeout(nextGameRound,650);
+}
+function pauseGame(){
+ if(!gameRunning)return;
+ if(gamePaused){gamePaused=false;pauseGameBtn.textContent="⏸ Pause";nextGameRound();}
+ else{gamePaused=true;clearTimeout(gameTimer);if("speechSynthesis" in window)speechSynthesis.cancel();pauseGameBtn.textContent="▶ Resume";toast("Game paused")}
+}
+function endGame(message){
+ gameRunning=false;gamePaused=false;clearTimeout(gameTimer);if("speechSynthesis" in window)speechSynthesis.cancel();
+ flying.innerHTML="";gameChoices.innerHTML="";gameQuestion.innerHTML=`<b>${message}</b> — Final score: <b>${gameScoreValue}</b>`;gameTime.textContent="Done";
+ gameIntro.style.display="flex";gameIntro.querySelector("h2").textContent="🏆 Game Complete!";
+ gameIntro.querySelector("p").innerHTML=`Final score: <b>${gameScoreValue}</b><br>Rounds completed: <b>${gameRound}</b><br>Click below to play again.`;
+ gameIntro.querySelector("button").textContent="▶ Play Again";
+}
+function toggleFull(){
+ gameBox.classList.toggle("full");
+ if(gameBox.classList.contains("full")&&gameBox.requestFullscreen)gameBox.requestFullscreen().catch(()=>{});
+ if(!gameBox.classList.contains("full")&&document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen().catch(()=>{});
+}
+document.addEventListener("fullscreenchange",()=>{if(!document.fullscreenElement)gameBox.classList.remove("full")});
+function grammarPractice(){grammarQ.innerHTML=`<div class="quiz"><p>I ___ finished my homework.</p><button onclick="answer(this,true)">have</button><button onclick="answer(this,false)">has</button></div>`}
+function startSpeech(){
+ speechStatus.textContent="Listening… speak now.";
+ const R=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!R){speechStatus.textContent="Speech recognition is not supported here. Try Chrome or Edge.";return}
+ const r=new R();r.lang=S.accent||"en-IN";r.interimResults=false;
+ r.onresult=e=>{const t=e.results[0][0].transcript;speechStatus.textContent="Captured speech";speechOut.innerHTML=`<div class="card"><b>You said:</b><p>${esc(t)}</p><p class="muted">Focus on grammar, vocabulary, fluency and clear pronunciation. Repeat once more.</p></div>`;addXP(15,"speaking practice")};
+ r.onerror=()=>speechStatus.textContent="Please try again.";r.start();
+}
+function checkWriting(){
+ let t=writer.value.trim();if(!t){toast("Write something first.");return}
+ let notes=[];
+ if(/yesterday.*\b(go|buy|eat|come|see)\b/i.test(t))notes.push("Past tense: go → went, buy → bought.");
+ if(!/\b(a|an|the)\b/i.test(t))notes.push("Check whether a/an/the is needed before nouns.");
+ writeFeedback.innerHTML=`<div class="card"><h3>Learning feedback</h3><p><b>Your text:</b> ${esc(t)}</p>${notes.length?"<ul>"+notes.map(x=>"<li>"+x+"</li>").join("")+"</ul>":"<p>Good start. Continue checking tense, articles, prepositions and sentence structure.</p>"}</div>`;
+ addXP(25,"writing practice");
+}
+function sendChat(){
+ let v=chatInput.value.trim();if(!v)return;
+ chatbox.innerHTML+=`<div class="bubble me"><b>You:</b> ${esc(v)}</div>`;
+ let r=/yesterday/i.test(v)&&/\bgo\b/i.test(v)?"Better: “Yesterday I went to the market.” What did you buy?":/hello|hi/i.test(v)?"Hello! What did you do today?":"Good effort. Please answer in a complete sentence. Can you tell me more?";
+ chatbox.innerHTML+=`<div class="bubble ai"><b>Teacher:</b> ${r}</div>`;
+ chatInput.value="";chatbox.scrollTop=chatbox.scrollHeight;addXP(5,"conversation");
+}
+function roleplay(t){
+ const q={restaurant:["Restaurant","Waiter: Welcome! What would you like to order?"],shop:["Shop","Shopkeeper: Hello! What are you looking for?"],station:["Railway Station","Clerk: Where would you like to travel?"],interview:["Job Interview","Interviewer: Tell me about yourself."],office:["Office Meeting","Manager: What is your opinion about this proposal?"],presentation:["Presentation","Audience: Please begin your presentation."]}[t];
+ roleBox.innerHTML=`<span class="tag">${q[0]}</span><h3>${q[1]}</h3><p>Reply in English. Then use the AI Teacher for correction.</p><button onclick="speak(${JSON.stringify(q[1])})">🔊 Hear prompt</button><button class="secondary" onclick="show('chat')">Continue with AI</button>`;
+ addXP(5,"role-play started");
+}
+function weeklyTest(){
+ testArea.innerHTML=`<div class="quiz"><h3>Question 1 — Grammar</h3><p>Yesterday I ___ to the market.</p><button onclick="testAns(this,true)">went</button><button onclick="testAns(this,false)">go</button><h3>Question 2 — Vocabulary</h3><p>“eager” means:</p><button onclick="testAns(this,true)">very excited / interested</button><button onclick="testAns(this,false)">untidy</button></div>`;
+ S.tests++;save();
+}
+function testAns(btn,ok){S.attempts++;if(ok){S.correct++;btn.classList.add("correct");addXP(20,"test answer")}else btn.classList.add("wrong");save()}
+function saveName(){S.name=nameInput.value.trim();save();toast("Name saved!")}
+function resetProgress(){if(confirm("Reset all local progress?")){localStorage.removeItem("englishMasteryPro");location.reload()}}
+function esc(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function answer(btn,ok){S.attempts++;if(ok){S.correct++;btn.classList.add("correct");addXP(10,"correct answer")}else btn.classList.add("wrong");save()}
+function grammarPractice(){grammarQ.innerHTML=`<div class="quiz"><p>I ___ finished my homework.</p><button onclick="answer(this,true)">have</button><button onclick="answer(this,false)">has</button></div>`}
+function startSpeech(){
+ speechStatus.textContent="Listening… speak now.";
+ const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R){speechStatus.textContent="Speech recognition is not supported here. Try Chrome or Edge.";return}
+ let r=new R();r.lang=S.accent||"en-IN";r.interimResults=false;r.onresult=e=>{let t=e.results[0][0].transcript;speechStatus.textContent="Captured speech";speechOut.innerHTML=`<div class="card"><b>You said:</b><p>${esc(t)}</p><p class="muted">Focus on grammar, vocabulary, fluency and clear pronunciation. Repeat once more.</p></div>`;addXP(15,"speaking practice")};r.onerror=()=>speechStatus.textContent="Please try again.";r.start()
+}
+function checkWriting(){
+ let t=writer.value.trim();if(!t){toast("Write something first.");return}
+ let notes=[];if(/yesterday.*\\b(go|buy|eat|come|see)\\b/i.test(t))notes.push("Past tense: go → went, buy → bought.");if(!/\\b(a|an|the)\\b/i.test(t))notes.push("Check whether a/an/the is needed before nouns.");
+ writeFeedback.innerHTML=`<div class="card"><h3>Learning feedback</h3><p><b>Your text:</b> ${esc(t)}</p>${notes.length?"<ul>"+notes.map(x=>"<li>"+x+"</li>").join("")+"</ul>":"<p>Good start. Continue checking tense, articles, prepositions and sentence structure.</p>"}</div>`;addXP(25,"writing practice")
+}
+function sendChat(){
+ let v=chatInput.value.trim();if(!v)return;chatbox.innerHTML+=`<div class="bubble me"><b>You:</b> ${esc(v)}</div>`;
+ let r=/yesterday/i.test(v)&&/\\bgo\\b/i.test(v)?"Better: “Yesterday I went to the market.” What did you buy?":/hello|hi/i.test(v)?"Hello! What did you do today?":"Good effort. Please answer in a complete sentence. Can you tell me more?";
+ chatbox.innerHTML+=`<div class="bubble ai"><b>Teacher:</b> ${r}</div>`;chatInput.value="";chatbox.scrollTop=chatbox.scrollHeight;addXP(5,"conversation")
+}
+function roleplay(t){
+ const q={restaurant:["Restaurant","Waiter: Welcome! What would you like to order?"],shop:["Shop","Shopkeeper: Hello! What are you looking for?"],station:["Railway Station","Clerk: Where would you like to travel?"],interview:["Job Interview","Interviewer: Tell me about yourself."],office:["Office Meeting","Manager: What is your opinion about this proposal?"],presentation:["Presentation","Audience: Please begin your presentation."]}[t];
+ roleBox.innerHTML=`<span class="tag">${q[0]}</span><h3>${q[1]}</h3><p>Reply in English. Then use the AI Teacher for correction.</p><button onclick="speak(${JSON.stringify(q[1])})">🔊 Hear prompt</button><button class="secondary" onclick="show('chat')">Continue with AI</button>`;addXP(5,"role-play started")
+}
+function weeklyTest(){
+ testArea.innerHTML=`<div class="quiz"><h3>Question 1 — Grammar</h3><p>Yesterday I ___ to the market.</p><button onclick="testAns(this,true)">went</button><button onclick="testAns(this,false)">go</button><h3>Question 2 — Vocabulary</h3><p>“eager” means:</p><button onclick="testAns(this,true)">very excited / interested</button><button onclick="testAns(this,false)">untidy</button></div>`;S.tests++;save()
+}
+function testAns(btn,ok){S.attempts++;if(ok){S.correct++;btn.classList.add("correct");addXP(20,"test answer")}else btn.classList.add("wrong");save()}
+function saveName(){S.name=nameInput.value.trim();save();toast("Name saved!")}
+function resetProgress(){if(confirm("Reset all local progress?")){localStorage.removeItem("englishMasteryPro");location.reload()}}
+function esc(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+
+function runDiagnostics(){
+ const items=[
+  ["JavaScript",true],
+  ["Local storage",typeof localStorage!=="undefined"],
+  ["Speech synthesis","speechSynthesis" in window && "SpeechSynthesisUtterance" in window],
+  ["Speech recognition",!!(window.SpeechRecognition||window.webkitSpeechRecognition)],
+  ["Fullscreen API",!!document.documentElement.requestFullscreen],
+  ["CSS animations",typeof CSS!=="undefined" && !!CSS.supports && CSS.supports("animation","rise 1s linear")]
+ ];
+ diagnostics.innerHTML=items.map(x=>`<div style="margin:5px 0">${x[1]?"✅":"⚠️"} ${x[0]}</div>`).join("")+
+ '<p style="margin-top:10px">If Speech Recognition is unavailable, the game and lessons still work; only microphone transcription is affected.</p>';
+}
+function clearLocalData(){
+ if(confirm("Clear this app's saved progress and settings?")){
+   localStorage.removeItem("englishMasteryPro"); location.reload();
+ }
+}
+window.addEventListener("error",e=>localStatus("App error: "+e.message));
+
+if(!S.accent)S.accent="en-IN";
+if(S.name)nameInput.value=S.name;
+renderV();updateHUD();updateVoiceInfo();setGameSpeed(document.getElementById("gameSpeed")?.value||5);
+if("speechSynthesis" in window)speechSynthesis.onvoiceschanged=()=>updateVoiceInfo();
+</script>
+</body>
+</html>

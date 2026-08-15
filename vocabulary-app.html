@@ -1,0 +1,801 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Grade 3 Vocabulary Learning Fun</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(135deg,#eef7ff,#fff8e8);color:#243447;box-sizing:border-box;transition: background 0.3s, color 0.3s;}
+*, *:before, *:after { box-sizing: inherit; }
+header{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:white;text-align:center;padding:24px 15px;}
+h1{margin:0;font-size:28px}.wrap{max-width:1100px;margin:15px auto;padding:0 10px;}
+.toolbar,.progress,.card,.flash,.quiz, .add-word-panel{background:white;border-radius:18px;padding:14px;box-shadow:0 5px 18px #0001;margin-bottom:14px;transition: background 0.3s, color 0.3s, border-color 0.3s;}
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;}
+input{flex:1;min-width:200px;padding:12px;border:2px solid #ddd;border-radius:10px;font-size:16px;}
+button{border:0;border-radius:10px;padding:12px 14px;font-weight:bold;cursor:pointer;background:#eef2ff;color:#3730a3;font-size:15px;min-height:44px;}
+.primary{background:#4f46e5;color:white}.green{background:#dcfce7;color:#166534}.orange{background:#ffedd5;color:#9a3412}
+.bar{height:11px;background:#e5e7eb;border-radius:20px;overflow:hidden;margin-top:8px}.fill{height:100%;background:#4f46e5;width:2%;transition:.3s}
+.flash{text-align:center;min-height:260px;display:flex;flex-direction:column;justify-content:center}
+.num{color:#64748b;font-size:14px;}.word{font-size:40px;font-weight:800;color:#3730a3;margin:8px 0;word-break:break-word;}
+.meaning{font-size:20px;max-width:750px;margin:8px auto;line-height:1.4}
+.actions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;width:100%;margin-top:6px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.card{padding:14px;}
+.card h3{margin:0 0 8px;color:#3730a3}.card p{line-height:1.4;margin:0 0 10px;}
+.hidden{display:none !important;}
+.option{display:block;width:100%;text-align:left;margin:8px 0;background:#f8fafc;border:2px solid #e2e8f0}
+.correct{background:#dcfce7!important}.wrong{background:#fee2e2!important}
+.small{color:#64748b;font-size:13px}
+
+.voice-panel{background:white;border-radius:18px;padding:14px;box-shadow:0 5px 18px #0001;margin:10px 0 0 0;width:100%;}
+.voice-title{font-size:17px;font-weight:800;color:#3730a3;margin-bottom:8px}
+.voice-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.voice-controls label{display:flex;align-items:center;gap:7px;font-weight:700;font-size:14px;}
+select{padding:10px;border:2px solid #ddd;border-radius:10px;background:white;font-size:15px;}
+input[type=range]{width:130px;accent-color:#4f46e5}
+#voiceStatus{margin-top:8px;font-weight:bold;color:#4f46e5;font-size:13px;}
+
+.hindi-meaning{font-size:19px;color:#b45309;font-weight:700;margin:6px auto 12px;max-width:750px;line-height:1.4}
+.hindiBtn{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}
+
+.range-box{display:flex;align-items:center;gap:6px;background:#f8fafc;padding:7px 10px;border-radius:10px}
+.range-box label{font-weight:700;font-size:14px;}.range-box select{padding:7px 8px}
+
+.sentenceBtn{background:#ecfeff;color:#155e75;border:1px solid #a5f3fc}
+.sentence-box{background:#f0fdfa;border:2px solid #99f6e4;border-radius:16px;padding:14px;margin:12px auto 4px;max-width:800px}
+.sentence-title{font-size:17px;font-weight:800;color:#0f766e;margin-bottom:6px}
+.sentence-en{font-size:19px;font-weight:700;line-height:1.4}
+.sentence-hi{font-size:17px;color:#9a3412;font-weight:700;line-height:1.4;margin-top:6px}
+
+/* Add Word Panel */
+.add-word-panel { background: #f0fdf4; border: 2px solid #bbf7d0; }
+.add-word-title { font-size: 18px; font-weight: 800; color: #166534; margin-bottom: 10px; }
+.add-word-inputs { display: flex; flex-wrap: wrap; gap: 10px; }
+.add-word-inputs input { min-width: 180px; }
+
+/* Themes Styling */
+body.dark { background: linear-gradient(135deg, #0f172a, #1e1b4b); color: #f8fafc; }
+body.dark .toolbar, body.dark .progress, body.dark .card, body.dark .flash, body.dark .add-word-panel, body.dark .voice-panel { background: #1e293b; color: #f8fafc; box-shadow: 0 5px 18px rgba(0,0,0,0.5); border-color: #334155; }
+body.dark input, body.dark select { background: #0f172a; color: white; border-color: #334155; }
+body.dark .word { color: #818cf8; }
+body.dark .range-box { background: #0f172a; color: white; }
+body.dark .small, body.dark .num { color: #94a3b8; }
+
+body.ocean { background: linear-gradient(135deg, #e0f2fe, #bae6fd); color: #0369a1; }
+body.ocean header { background: linear-gradient(135deg, #0284c7, #0369a1); }
+body.ocean .word { color: #0284c7; }
+body.ocean .toolbar, body.ocean .progress, body.ocean .card, body.ocean .flash, body.ocean .add-word-panel, body.ocean .voice-panel { background: #f0f9ff; border-color: #bae6fd; }
+
+body.sunset { background: linear-gradient(135deg, #fef3c7, #ffedd5); color: #7c2d12; }
+body.sunset header { background: linear-gradient(135deg, #ea580c, #c2410c); }
+body.sunset .word { color: #c2410c; }
+body.sunset .toolbar, body.sunset .progress, body.sunset .card, body.sunset .flash, body.sunset .add-word-panel, body.sunset .voice-panel { background: #fffbeb; border-color: #fde68a; }
+
+/* Kids Friendly Themes */
+body.candy { background: linear-gradient(135deg, #ffe4e6, #fef08a); color: #831843; }
+body.candy header { background: linear-gradient(135deg, #f43f5e, #db2777); }
+body.candy .word { color: #e11d48; }
+body.candy .toolbar, body.candy .progress, body.candy .card, body.candy .flash, body.candy .add-word-panel, body.candy .voice-panel { background: #fff1f2; border-color: #fbcfe8; }
+body.candy .range-box { background: #ffe4e6; color: #831843; }
+
+body.jungle { background: linear-gradient(135deg, #ecfccb, #d1fae5); color: #14532d; }
+body.jungle header { background: linear-gradient(135deg, #16a34a, #15803d); }
+body.jungle .word { color: #15803d; }
+body.jungle .toolbar, body.jungle .progress, body.jungle .card, body.jungle .flash, body.jungle .add-word-panel, body.jungle .voice-panel { background: #f7fee7; border-color: #bef264; }
+body.jungle .range-box { background: #ecfccb; color: #14532d; }
+
+body.rainbow { background: linear-gradient(135deg, #fae8ff, #e0f2fe); color: #581c87; }
+body.rainbow header { background: linear-gradient(135deg, #9333ea, #c084fc); }
+body.rainbow .word { color: #7e22ce; }
+body.rainbow .toolbar, body.rainbow .progress, body.rainbow .card, body.rainbow .flash, body.rainbow .add-word-panel, body.rainbow .voice-panel { background: #fdf4ff; border-color: #f5d0fe; }
+body.rainbow .range-box { background: #fae8ff; color: #581c87; }
+
+/* Full Screen Flying Game Mode */
+#flyingGame {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: radial-gradient(circle, #1e1b4b, #0f172a);
+  z-index: 99999; overflow: hidden; color: white; font-family: Arial, sans-serif;
+}
+.game-ui-top { position: absolute; top: 15px; left: 15px; right: 15px; display: flex; justify-content: space-between; align-items: center; z-index: 10; flex-wrap: wrap; gap: 10px; }
+.game-score-display { font-size: 24px; font-weight: 900; color: #fbbf24; text-shadow: 2px 2px 4px #000; }
+.game-controls-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.game-speed-label { font-size: 15px; font-weight: bold; color: white; display: flex; align-items: center; gap: 6px; }
+.game-speed-select { padding: 6px 10px; border-radius: 8px; font-size: 14px; border: none; font-weight: bold; background: white; color: #3730a3; cursor: pointer; }
+.game-close-btn { background: #ef4444; color: white; padding: 8px 14px; font-size: 15px; border-radius: 10px; cursor: pointer; border: 2px solid #b91c1c; font-weight: bold; }
+.game-instruction { position: absolute; top: 70px; width: 100%; text-align: center; font-size: 22px; font-weight: bold; color: #e0e7ff; z-index: 10; text-shadow: 1px 1px 5px rgba(0,0,0,0.5); padding: 0 10px; }
+
+.flying-bubble {
+  position: absolute; bottom: -250px;
+  background: rgba(255, 255, 255, 0.95); color: #3730a3;
+  padding: 12px; border-radius: 14px; text-align: center;
+  cursor: pointer; box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  width: 200px; border: 4px solid #6366f1;
+  animation: flyUp linear forwards;
+}
+.flying-bubble h3 { margin: 0 0 4px 0; font-size: 20px; color: #4f46e5; }
+.flying-bubble p { margin: 0; font-size: 14px; font-weight: bold; color: #333; line-height: 1.2; }
+@keyframes flyUp {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-130vh); }
+}
+
+/* --- MOBILE RESPONSIVE MEDIA QUERIES --- */
+@media(max-width: 768px) {
+  header { padding: 18px 10px; }
+  h1 { font-size: 22px; }
+  header p { font-size: 13px; margin: 5px 0 0; }
+  .toolbar { flex-direction: column; align-items: stretch; gap: 8px; }
+  .toolbar input, .toolbar button, .toolbar .range-box { width: 100%; }
+  .range-box { justify-content: space-between; }
+  .voice-controls { flex-direction: column; align-items: stretch; }
+  .voice-controls label, .voice-controls button, .voice-controls select { width: 100%; justify-content: space-between; }
+  .voice-controls input[type=range] { width: 100%; }
+  .flash { min-height: auto; padding: 15px 8px; }
+  .word { font-size: 32px; }
+  .meaning { font-size: 17px; }
+  .hindi-meaning { font-size: 16px; }
+  .grid { grid-template-columns: 1fr; }
+  .actions { flex-direction: column; }
+  .actions button { width: 100%; }
+  .add-word-inputs { flex-direction: column; }
+  .add-word-inputs input, .add-word-inputs button { width: 100%; }
+  .game-instruction { font-size: 18px; top: 65px; }
+  .flying-bubble { width: 170px; padding: 10px; }
+  .flying-bubble h3 { font-size: 18px; }
+  .flying-bubble p { font-size: 13px; }
+}
+
+@media(max-width: 480px) {
+  .word { font-size: 28px; }
+  .game-score-display { font-size: 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Flying Game Overlay -->
+<div id="flyingGame" class="hidden">
+  <div class="game-ui-top">
+    <div class="game-score-display">Score: <span id="flyScore">0</span></div>
+    <div class="game-controls-right">
+      <label class="game-speed-label">
+        Speed:
+        <select id="gameSpeedSelect" class="game-speed-select" onchange="updateGameSpeed()">
+          <option value="1.5">🐌 Slow</option>
+          <option value="1" selected>▶️ Normal</option>
+          <option value="0.7">⚡ Fast</option>
+          <option value="0.45">🚀 Super Fast</option>
+        </select>
+      </label>
+      <button class="game-close-btn" onclick="stopFlyingGame()">❌ Exit</button>
+    </div>
+  </div>
+  <div class="game-instruction" id="flyInstruction">Listen and click the correct word!</div>
+  <div id="flyContainer"></div>
+</div>
+
+<header>
+  <h1>🌟 Grade 3 Vocabulary Learning Fun</h1>
+  <p>Hear • Learn • Practice • Remember</p>
+  <div style="margin-top:12px; display:flex; justify-content:center;">
+    <button class="primary" onclick="location.href='index.html'">🏠 Home</button>
+  </div>
+</header>
+<div class="wrap">
+<div class="toolbar">
+<input id="search" placeholder="🔎 Search a word or meaning..." oninput="render()">
+<button class="primary" onclick="topLearn()">▶ Start Learning</button>
+<button onclick="both()">🔊 Hear Word + Meaning</button>
+<button class="orange" id="autoPlayBtn" onclick="toggleAutoPlay()">▶️ Auto Play All</button>
+<button onclick="stopAutoPlay()">⏹ Stop</button>
+<div class="range-box">
+  <label>📚 Words</label>
+  <select id="rangeStart"></select>
+  <span>to</span>
+  <select id="rangeEnd"></select>
+</div>
+<button class="primary" onclick="startSelectedLearning()">📖 Learn Selected Range</button>
+<button class="green" onclick="startFlyingGame()">🎮 Play Flying Game</button>
+<button class="primary" onclick="exportToExcel()" style="background:#10b981;">📥 Export to Excel</button>
+<button class="orange" onclick="toggleFullScreen()">📺 Full Screen</button>
+<div class="range-box">
+  <label>🎨 Theme</label>
+  <select id="themeSelect" onchange="changeTheme(this.value)">
+    <option value="light">☀️ Light</option>
+    <option value="candy">🍬 Candy Pop</option>
+    <option value="jungle">🦖 Jungle Safari</option>
+    <option value="rainbow">🦄 Magical Rainbow</option>
+    <option value="ocean">🌊 Ocean Blue</option>
+    <option value="sunset">🌅 Sunset Warm</option>
+    <option value="dark">🌙 Dark Mode</option>
+  </select>
+</div>
+
+<div class="voice-panel">
+  <div class="voice-title">🎙️ Voice & Pronunciation Settings</div>
+  <div class="voice-controls">
+    <label>Voice
+      <select id="voiceSelect">
+        <option value="auto">Auto – Indian English</option>
+        <option value="male">🇮🇳 Indian Male</option>
+        <option value="female">🇮🇳 Indian Female</option>
+      </select>
+    </label>
+    <label>Speed
+      <input id="speedRange" type="range" min="0.5" max="1.5" step="0.05" value="0.82">
+      <span id="speedValue">0.82×</span>
+    </label>
+    <button onclick="testVoice()">🔊 Test Voice</button>
+    <button class="green" onclick="startVoiceInput()">🎤 Speak a Word Challenge</button>
+    <button class="orange" onclick="nextVoiceChallengeWord()">⏭️ Next Word</button>
+  </div>
+  <div id="voiceStatus" class="small">Choose a voice and speed. Click "Speak a Word Challenge" to test your pronunciation! Use "Next Word" to skip anytime.</div>
+</div>
+</div>
+<div class="progress"><div id="autoStatus" class="small">Auto Play is off</div><b id="progress">Word 1 of 50</b><div class="bar"><div class="fill" id="fill"></div></div></div>
+<div class="flash" id="flash">
+<div class="num" id="num"></div><div class="word" id="word"></div>
+<div class="small">Click an audio button to listen.</div><div class="meaning" id="meaning"></div><div class="hindi-meaning" id="hindiMeaning"></div><div class="sentence-box hidden" id="sentenceBox"><div class="sentence-title">✏️ Example Sentence</div><div class="sentence-en" id="sentenceEnglish"></div><div class="sentence-hi" id="sentenceHindi"></div><div class="actions"><button class="primary" onclick="hearSentence()">🔊 Hear Sentence</button><button class="hindiBtn" onclick="hearSentenceHindi()">🇮🇳 सुनें (Hindi)</button></div></div>
+<div class="actions">
+<button class="primary" onclick="sayWord()">🔊 Hear Word</button>
+<button onclick="sayMeaning()">🔊 Hear Meaning</button><button class="hindiBtn" onclick="sayHindi()">🇮🇳 हिंदी अर्थ</button>
+<button class="green" onclick="both()">🗣️ Hear Both</button><button class="sentenceBtn" onclick="showSentence()">✏️ Use in a Sentence</button>
+<button class="orange" onclick="next()">Next ➜</button>
+</div></div>
+<div class="actions"><button onclick="prev()">← Previous</button><button class="primary" onclick="randomWord()">🎲 Random Word</button></div>
+
+<div class="add-word-panel">
+  <div class="add-word-title">➕ Add a New Word to the List</div>
+  <div class="add-word-inputs">
+    <input id="newWord" placeholder="Word (e.g. Gigantic)" required>
+    <input id="newMeaning" placeholder="English Meaning" required>
+    <input id="newHindi" placeholder="Hindi Meaning">
+    <input id="newSentence" placeholder="Example Sentence">
+    <button class="green" onclick="addNewWord()">✅ Add to List</button>
+  </div>
+</div>
+
+<h2>📚 All Words</h2><div class="grid" id="grid"></div>
+</div>
+
+<script>
+const words=[{"n": 1, "word": "Abundant", "meaning": "Existing in large quantities", "hindi": "बहुत अधिक मात्रा में मौजूद", "sentence": "There was an abundant supply of water after the rain.", "sentenceHindi": "बारिश के बाद पानी की भरपूर मात्रा उपलब्ध थी।"}, {"n": 2, "word": "Accurate", "meaning": "Free from mistakes", "hindi": "गलतियों से मुक्त; सही", "sentence": "Please give me an accurate answer.", "sentenceHindi": "कृपया मुझे सही उत्तर दें।"}, {"n": 3, "word": "Admiration", "meaning": "Great respect or approval", "hindi": "बहुत सम्मान या प्रशंसा", "sentence": "The artist received admiration for her beautiful painting.", "sentenceHindi": "कलाकार को अपनी सुंदर पेंटिंग के लिए प्रशंसा मिली।"}, {"n": 4, "word": "Adventure", "meaning": "An exciting experience", "hindi": "रोमांचक अनुभव", "sentence": "Our trip to the mountains was a great adventure.", "sentenceHindi": "पहाड़ों की हमारी यात्रा एक शानदार रोमांच थी।"}, {"n": 5, "word": "Ambitious", "meaning": "Having a strong desire to succeed", "hindi": "सफल होने की प्रबल इच्छा रखने वाला", "sentence": "Riya is ambitious and wants to become a scientist.", "sentenceHindi": "रिया महत्वाकांक्षी है और वैज्ञानिक बनना चाहती है।"}, {"n": 6, "word": "Ancestors", "meaning": "People from your family long ago", "hindi": "बहुत पहले के परिवार के लोग; पूर्वज", "sentence": "We should respect our ancestors and learn from them.", "sentenceHindi": "हमें अपने पूर्वजों का सम्मान करना चाहिए और उनसे सीखना चाहिए।"}, {"n": 7, "word": "Appreciate", "meaning": "To value or be thankful", "hindi": "मूल्य समझना या आभारी होना", "sentence": "I appreciate your help with my homework.", "sentenceHindi": "मैं अपने गृहकार्य में आपकी मदद की सराहना करता हूँ।"}, {"n": 8, "word": "Attention", "meaning": "Careful focus", "hindi": "सावधानीपूर्वक ध्यान", "sentence": "Please pay attention to the teacher.", "sentenceHindi": "कृपया शिक्षक की बात पर ध्यान दें।"}, {"n": 9, "word": "Bountiful", "meaning": "Existing in plenty", "hindi": "बहुतायत में मौजूद", "sentence": "The garden produced a bountiful harvest.", "sentenceHindi": "बगीचे में भरपूर फसल हुई।"}, {"n": 10, "word": "Brilliant", "meaning": "Very clever or excellent", "hindi": "बहुत होशियार या उत्कृष्ट", "sentence": "A brilliant student solved the difficult problem.", "sentenceHindi": "एक बहुत होशियार छात्र ने कठिन समस्या हल कर दी।"}, {"n": 11, "word": "Celebrate", "meaning": "To observe a special event", "hindi": "किसी विशेष घटना को मनाना", "sentence": "We will celebrate our school's annual day.", "sentenceHindi": "हम अपने स्कूल का वार्षिक दिवस मनाएँगे।"}, {"n": 12, "word": "Champion", "meaning": "A winner", "hindi": "विजेता", "sentence": "The champion received a gold medal.", "sentenceHindi": "विजेता को स्वर्ण पदक मिला।"}, {"n": 13, "word": "Character", "meaning": "The nature of a person", "hindi": "किसी व्यक्ति का स्वभाव", "sentence": "Honesty is an important part of a person's character.", "sentenceHindi": "ईमानदारी किसी व्यक्ति के चरित्र का महत्वपूर्ण हिस्सा है।"}, {"n": 14, "word": "Challenge", "meaning": "A difficult task", "hindi": "कठिन कार्य", "sentence": "Climbing the tall hill was a challenge.", "sentenceHindi": "ऊँची पहाड़ी पर चढ़ना एक चुनौती थी।"}, {"n": 15, "word": "Cautious", "meaning": "Careful to avoid danger", "hindi": "खतरे से बचने के लिए सावधान", "sentence": "Be cautious when crossing the busy road.", "sentenceHindi": "व्यस्त सड़क पार करते समय सावधान रहें।"}, {"n": 16, "word": "Comfortable", "meaning": "Feeling relaxed and at ease", "hindi": "आराम और सहज महसूस करना", "sentence": "The new chair is comfortable to sit on.", "sentenceHindi": "नई कुर्सी पर बैठना आरामदायक है।"}, {"n": 17, "word": "Companion", "meaning": "A close friend", "hindi": "करीबी मित्र या साथी", "sentence": "My best friend is my favorite companion.", "sentenceHindi": "मेरा सबसे अच्छा दोस्त मेरा पसंदीदा साथी है।"}, {"n": 18, "word": "Confident", "meaning": "Believing in yourself", "hindi": "अपने आप पर विश्वास रखने वाला", "sentence": "She felt confident before the competition.", "sentenceHindi": "प्रतियोगिता से पहले वह आत्मविश्वास से भरी थी।"}, {"n": 19, "word": "Cooperate", "meaning": "To work together", "hindi": "मिलकर काम करना", "sentence": "We must cooperate to complete the project.", "sentenceHindi": "हमें परियोजना पूरी करने के लिए मिलकर काम करना चाहिए।"}, {"n": 20, "word": "Courageous", "meaning": "Showing bravery", "hindi": "बहादुरी दिखाने वाला", "sentence": "The courageous firefighter saved the child.", "sentenceHindi": "बहादुर अग्निशामक ने बच्चे को बचाया।"}, {"n": 21, "word": "Curiosity", "meaning": "A strong desire to know", "hindi": "जानने की प्रबल इच्छा", "sentence": "His curiosity made him ask many questions.", "sentenceHindi": "उसकी जिज्ञासा ने उसे बहुत से प्रश्न पूछने के लिए प्रेरित किया।"}, {"n": 22, "word": "Delightful", "meaning": "Very pleasing", "hindi": "बहुत सुखद", "sentence": "We had a delightful picnic in the park.", "sentenceHindi": "हमने पार्क में एक बहुत सुखद पिकनिक मनाई।"}, {"n": 23, "word": "Determined", "meaning": "Firmly decided", "hindi": "दृढ़ निश्चय किया हुआ", "sentence": "She was determined to finish the race.", "sentenceHindi": "वह दौड़ पूरी करने के लिए दृढ़ निश्चयी थी।"}, {"n": 24, "word": "Discover", "meaning": "To find something new", "hindi": "कुछ नया खोजना", "sentence": "Scientists discover new things every day.", "sentenceHindi": "वैज्ञानिक हर दिन नई चीजें खोजते हैं।"}, {"n": 25, "word": "Education", "meaning": "The process of learning", "hindi": "सीखने की प्रक्रिया", "sentence": "Education helps us build a better future.", "sentenceHindi": "शिक्षा हमें बेहतर भविष्य बनाने में मदद करती है।"}, {"n": 26, "word": "Elegant", "meaning": "Graceful and beautiful", "hindi": "सुंदर और आकर्षक", "sentence": "The dancer wore an elegant dress.", "sentenceHindi": "नर्तकी ने एक सुंदर और आकर्षक पोशाक पहनी।"}, {"n": 27, "word": "Encourage", "meaning": "To give confidence", "hindi": "आत्मविश्वास देना", "sentence": "Parents encourage children to do their best.", "sentenceHindi": "माता-पिता बच्चों को अपना सर्वश्रेष्ठ करने के लिए प्रोत्साहित करते हैं।"}, {"n": 28, "word": "Environment", "meaning": "The world around us", "hindi": "हमारे चारों ओर की दुनिया", "sentence": "We should keep our environment clean.", "sentenceHindi": "हमें अपने पर्यावरण को साफ रखना चाहिए।"}, {"n": 29, "word": "Excellent", "meaning": "Extremely good", "hindi": "बहुत अच्छा", "sentence": "Your work is excellent.", "sentenceHindi": "तुम्हारा काम बहुत अच्छा है।"}, {"n": 30, "word": "Extraordinary", "meaning": "Very unusual or remarkable", "hindi": "बहुत असामान्य या उल्लेखनीय", "sentence": "The magician performed an extraordinary trick.", "sentenceHindi": "जादूगर ने एक असाधारण करतब दिखाया।"}, {"n": 31, "word": "Familiar", "meaning": "Well known", "hindi": "जिससे अच्छी तरह परिचित हों", "sentence": "This place looks familiar to me.", "sentenceHindi": "यह जगह मुझे जानी-पहचानी लगती है।"}, {"n": 32, "word": "Fortunate", "meaning": "Lucky", "hindi": "भाग्यशाली", "sentence": "We were fortunate to find a taxi quickly.", "sentenceHindi": "हम भाग्यशाली थे कि हमें जल्दी टैक्सी मिल गई।"}, {"n": 33, "word": "Friendship", "meaning": "The bond between friends", "hindi": "दोस्तों के बीच का रिश्ता", "sentence": "Friendship grows when friends help each other.", "sentenceHindi": "दोस्त एक-दूसरे की मदद करते हैं तो दोस्ती मजबूत होती है।"}, {"n": 34, "word": "Generosity", "meaning": "The quality of being kind and giving", "hindi": "दयालु और देने की भावना", "sentence": "Her generosity helped many people.", "sentenceHindi": "उसकी उदारता ने बहुत से लोगों की मदद की।"}, {"n": 35, "word": "Gratitude", "meaning": "The feeling of being thankful", "hindi": "आभारी होने की भावना", "sentence": "I feel gratitude for everything my parents do.", "sentenceHindi": "मैं अपने माता-पिता के हर काम के लिए आभारी हूँ।"}, {"n": 36, "word": "Harmony", "meaning": "Peace and agreement", "hindi": "शांति और मेल-जोल", "sentence": "The two teams worked together in harmony.", "sentenceHindi": "दोनों टीमों ने आपसी मेल-जोल से काम किया।"}, {"n": 37, "word": "Honourable", "meaning": "Deserving respect", "hindi": "सम्मान के योग्य", "sentence": "He is an honourable person who always tells the truth.", "sentenceHindi": "वह एक सम्माननीय व्यक्ति है जो हमेशा सच बोलता है।"}, {"n": 38, "word": "Imagination", "meaning": "The ability to create ideas", "hindi": "विचार बनाने की क्षमता", "sentence": "Use your imagination to create a new story.", "sentenceHindi": "नई कहानी बनाने के लिए अपनी कल्पना का उपयोग करो।"}, {"n": 39, "word": "Independent", "meaning": "Able to work alone", "hindi": "अकेले काम करने में सक्षम", "sentence": "An independent student can complete work without help.", "sentenceHindi": "एक स्वतंत्र छात्र बिना मदद के काम पूरा कर सकता है।"}, {"n": 40, "word": "Knowledge", "meaning": "Information gained through learning", "hindi": "सीखने से प्राप्त जानकारी", "sentence": "Knowledge makes us wiser.", "sentenceHindi": "ज्ञान हमें अधिक बुद्धिमान बनाता है।"}, {"n": 41, "word": "Magnificent", "meaning": "Extremely beautiful or impressive", "hindi": "बहुत सुंदर या प्रभावशाली", "sentence": "The palace looked magnificent in the evening light.", "sentenceHindi": "शाम की रोशनी में महल बहुत शानदार लग रहा था।"}, {"n": 42, "word": "Neighbourhood", "meaning": "The area around your home", "hindi": "आपके घर के आसपास का क्षेत्र", "sentence": "Our neighbourhood is quiet and friendly.", "sentenceHindi": "हमारा पड़ोस शांत और मिलनसार है।"}, {"n": 43, "word": "Observation", "meaning": "Careful watching", "hindi": "ध्यान से देखना", "sentence": "Careful observation helped the scientist find the answer.", "sentenceHindi": "ध्यानपूर्वक निरीक्षण करने से वैज्ञानिक को उत्तर मिला।"}, {"n": 44, "word": "Opportunity", "meaning": "A good chance", "hindi": "अच्छा अवसर", "sentence": "This scholarship is a great opportunity for her.", "sentenceHindi": "यह छात्रवृत्ति उसके लिए एक अच्छा अवसर है।"}, {"n": 45, "word": "Perseverance", "meaning": "Never giving up", "hindi": "कभी हार न मानना", "sentence": "Perseverance helped him win the competition.", "sentenceHindi": "दृढ़ता ने उसे प्रतियोगिता जीतने में मदद की।"}, {"n": 46, "word": "Responsible", "meaning": "Trustworthy and dependable", "hindi": "भरोसेमंद और विश्वसनीय", "sentence": "A responsible student completes homework on time.", "sentenceHindi": "एक जिम्मेदार छात्र समय पर गृहकार्य पूरा करता है।"}, {"n": 47, "word": "Respectful", "meaning": "Showing respect", "hindi": "सम्मान दिखाने वाला", "sentence": "Be respectful to your teachers and classmates.", "sentenceHindi": "अपने शिक्षकों और सहपाठियों के प्रति सम्मानजनक रहें।"}, {"n": 48, "word": "Spectacular", "meaning": "Very impressive", "hindi": "बहुत प्रभावशाली", "sentence": "The fireworks show was spectacular.", "sentenceHindi": "आतिशबाजी का प्रदर्शन बहुत शानदार था।"}, {"n": 49, "word": "Understand", "meaning": "To know the meaning of", "hindi": "अर्थ जानना", "sentence": "I understand the lesson now.", "sentenceHindi": "अब मैं पाठ को समझता हूँ।"}, {"n": 50, "word": "Wonderful", "meaning": "Extremely good", "hindi": "बहुत अच्छा", "sentence": "We had a wonderful day at the zoo.", "sentenceHindi": "चिड़ियाघर में हमारा दिन बहुत अच्छा रहा।"}];
+
+let i=0, score=0;
+let availableVoices=[];
+let selectedVoiceMode="auto";
+let selectedRate=0.82;
+
+window.activeSpeechUtterance = null; 
+
+function safeCancel() {
+    if (!("speechSynthesis" in window)) return;
+    if (speechSynthesis.paused) speechSynthesis.resume(); 
+    if (speechSynthesis.speaking || speechSynthesis.pending) {
+        speechSynthesis.cancel();
+    }
+}
+
+function loadVoices(){
+  if(!("speechSynthesis" in window)) return;
+  availableVoices=speechSynthesis.getVoices();
+  updateVoiceOptions();
+}
+function indianVoices(){
+  return availableVoices.filter(v=>{
+    const n=(v.name+" "+v.lang).toLowerCase();
+    return v.lang.toLowerCase().startsWith("en-in") || n.includes("india") || n.includes("hindi");
+  });
+}
+function chooseVoice(mode){
+  const iv=indianVoices();
+  if(!iv.length) return null;
+  if(mode==="male"){
+    return iv.find(v=>/male|man|ravi|hemant|amit|rishi|prabhat/i.test(v.name)) || iv[0];
+  }
+  if(mode==="female"){
+    return iv.find(v=>/female|woman|veena|heera|neerja|priya/i.test(v.name)) || iv.find(v=>!/male|man/i.test(v.name)) || iv[0];
+  }
+  return iv[0];
+}
+
+function speak(t,r=null){
+  if(!("speechSynthesis" in window)){alert("Your browser does not support speech audio.");return;}
+  safeCancel();
+  
+  const u = new SpeechSynthesisUtterance(t);
+  window.activeSpeechUtterance = u; 
+  
+  u.lang="en-IN";
+  u.rate=r===null?selectedRate:r;
+  u.pitch=selectedVoiceMode==="female"?1.08:selectedVoiceMode==="male"?0.92:1.0;
+  
+  const v=chooseVoice(selectedVoiceMode);
+  if(v) u.voice=v;
+  
+  setTimeout(() => { speechSynthesis.speak(u); }, 10);
+}
+
+function speakHindi(t){
+  if(!("speechSynthesis" in window)){alert("Your browser does not support speech audio.");return;} 
+  safeCancel();
+  
+  const u = new SpeechSynthesisUtterance(t); 
+  window.activeSpeechUtterance = u; 
+  
+  u.lang="hi-IN"; 
+  u.rate=selectedRate; 
+  u.pitch=selectedVoiceMode==="female"?1.08:selectedVoiceMode==="male"?0.92:1.0; 
+  
+  const iv=availableVoices.filter(v=>v.lang.toLowerCase().startsWith("hi-in")||/hindi|india/i.test(v.name)); 
+  if(iv.length) u.voice=iv[0]; 
+  
+  setTimeout(() => { speechSynthesis.speak(u); }, 10);
+}
+
+function updateVoiceOptions(){
+  const iv=indianVoices();
+  const status=document.getElementById("voiceStatus");
+  if(status){
+    if(iv.length) status.textContent=iv.length+" Indian-English voice(s) detected.";
+    else status.textContent="Using default available browser voice.";
+  }
+}
+function testVoice(){
+  speak("Hello! Let's learn vocabulary together. Abundant means existing in large quantities.");
+}
+
+/* --- VOICE CHALLENGE WITH NEXT WORD FEATURE --- */
+let activeRecognizer = null;
+let currentChallengeTarget = null;
+let isVoiceChallengeActive = false;
+
+function initSpeechRecognizer() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return null;
+  if (activeRecognizer) return activeRecognizer;
+
+  const rec = new SR();
+  rec.lang = "en-IN";
+  rec.interimResults = false;
+  rec.maxAlternatives = 3;
+
+  rec.onresult = e => {
+    if (!isVoiceChallengeActive || !currentChallengeTarget) return;
+    const heard = e.results[0][0].transcript.trim().toLowerCase();
+    const cleanHeard = heard.replace(/[^a-z]/g, "");
+    const cleanTarget = currentChallengeTarget.word.toLowerCase().replace(/[^a-z]/g, "");
+    
+    if (cleanHeard === cleanTarget || cleanHeard.includes(cleanTarget) || cleanTarget.includes(cleanHeard)) {
+      isVoiceChallengeActive = false;
+      document.getElementById("voiceStatus").textContent = `🎉 Excellent! Correctly pronounced "${currentChallengeTarget.word}".`;
+      speak("Excellent!");
+      let idx = words.findIndex(x => x.word.toLowerCase() === currentChallengeTarget.word.toLowerCase());
+      if (idx >= 0) { i = idx; show(); }
+    } else {
+      document.getElementById("voiceStatus").textContent = `❌ Said "${heard}". Try again! Listening...`;
+      speak("Try again.");
+      setTimeout(() => {
+        if (isVoiceChallengeActive) {
+          try { rec.start(); } catch(err) {}
+        }
+      }, 1200);
+    }
+  };
+  
+  rec.onerror = e => {
+    if (!isVoiceChallengeActive) return;
+    if (e.error === 'no-speech') {
+      document.getElementById("voiceStatus").textContent = `⏳ Didn't catch that. Say "${currentChallengeTarget.word}" again...`;
+      setTimeout(() => {
+        if (isVoiceChallengeActive) {
+          try { rec.start(); } catch(err) {}
+        }
+      }, 1000);
+    } else {
+      document.getElementById("voiceStatus").textContent = "Microphone error: " + e.error + ". Click challenge again.";
+      isVoiceChallengeActive = false;
+    }
+  };
+
+  activeRecognizer = rec;
+  return rec;
+}
+
+function startVoiceInput(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){
+    document.getElementById("voiceStatus").textContent="Voice input is not supported in this browser. Try Chrome or Edge.";
+    return;
+  }
+  
+  const pool = selectedWords();
+  currentChallengeTarget = pool[Math.floor(Math.random() * pool.length)];
+  isVoiceChallengeActive = true;
+  
+  document.getElementById("voiceStatus").textContent = `🎤 Speak now: "${currentChallengeTarget.word}"`;
+  speak("Please say the word, " + currentChallengeTarget.word);
+
+  const rec = initSpeechRecognizer();
+  if(!rec) return;
+
+  try { rec.stop(); } catch(err) {}
+
+  setTimeout(() => {
+    if (isVoiceChallengeActive) {
+      try { rec.start(); } catch(err) {}
+    }
+  }, 1200);
+}
+
+function nextVoiceChallengeWord(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){
+    document.getElementById("voiceStatus").textContent="Voice input is not supported in this browser.";
+    return;
+  }
+  
+  if (activeRecognizer) {
+    try { activeRecognizer.stop(); } catch(err) {}
+  }
+  
+  const pool = selectedWords();
+  let newTarget;
+  do {
+    newTarget = pool[Math.floor(Math.random() * pool.length)];
+  } while (pool.length > 1 && currentChallengeTarget && newTarget.word === currentChallengeTarget.word);
+
+  currentChallengeTarget = newTarget;
+  isVoiceChallengeActive = true;
+  
+  document.getElementById("voiceStatus").textContent = `🎤 Speak now: "${currentChallengeTarget.word}"`;
+  speak("Next word: " + currentChallengeTarget.word);
+
+  const rec = initSpeechRecognizer();
+  if(!rec) return;
+
+  setTimeout(() => {
+    if (isVoiceChallengeActive) {
+      try { rec.start(); } catch(err) {}
+    }
+  }, 1200);
+}
+
+if("speechSynthesis" in window){
+  speechSynthesis.onvoiceschanged=loadVoices;
+  loadVoices();
+}
+document.addEventListener("DOMContentLoaded",()=>{
+  const vs=document.getElementById("voiceSelect"), sr=document.getElementById("speedRange"), sv=document.getElementById("speedValue");
+  if(vs) vs.onchange=()=>{selectedVoiceMode=vs.value; updateVoiceOptions();};
+  if(sr) sr.oninput=()=>{selectedRate=parseFloat(sr.value); sv.textContent=selectedRate.toFixed(2)+"×";};
+
+  const savedTheme = localStorage.getItem("vocab_theme") || "light";
+  const themeSelect = document.getElementById("themeSelect");
+  if(themeSelect) themeSelect.value = savedTheme;
+  changeTheme(savedTheme);
+});
+
+function changeTheme(themeName) {
+  document.body.className = "";
+  if(themeName !== "light") {
+    document.body.classList.add(themeName);
+  }
+  localStorage.setItem("vocab_theme", themeName);
+}
+
+function toggleFullScreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(err => {
+      alert(`Error enabling full-screen mode: ${err.message}`);
+    });
+  } else {
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    }
+  }
+}
+
+function show(){
+    let x=words[i];
+    num.textContent="Word "+x.n;
+    word.textContent=x.word;
+    meaning.textContent=x.meaning;
+    hindiMeaning.textContent=x.hindi ? "हिंदी: "+x.hindi : "";
+    document.getElementById("sentenceBox").classList.add("hidden");
+    progress.textContent=`Word ${i+1} of ${words.length}`;
+    fill.style.width=((i+1)/words.length*100)+"%"
+}
+
+function sayWord(){speak(words[i].word)} 
+function sayMeaning(){speak(words[i].meaning,Math.max(0.5,Math.min(1.5,selectedRate*1.08)))}
+function sayHindi(){if(words[i].hindi) speakHindi(words[i].hindi)}
+
+function both(){speak(words[i].word+". "+words[i].meaning)}
+function next(){if(autoPlay) stopAutoPlay();i=(i+1)%words.length;show()} 
+function prev(){if(autoPlay) stopAutoPlay();i=(i+words.length-1)%words.length;show()}
+function randomWord(){if(autoPlay) stopAutoPlay();i=Math.floor(Math.random()*words.length);show()}
+function topLearn(){i=0;show();flash.scrollIntoView({behavior:"smooth"})}
+function selectWord(n){if(autoPlay) stopAutoPlay();i=n;show();flash.scrollIntoView({behavior:"smooth"})}
+function render(){let s=search.value.toLowerCase();grid.innerHTML=words.filter(x=>x.word.toLowerCase().includes(s)||x.meaning.toLowerCase().includes(s)).map(x=>`<div class="card"><h3>${x.n}. ${x.word}</h3><p>${x.meaning}</p><div class="actions"><button class="primary" onclick="selectWord(${x.n-1})">📖 Learn</button> <button class="hindiBtn" onclick="speak('${x.hindi}',0.82)">🇮🇳 हिंदी</button> <button class="sentenceBtn" onclick="selectWord(${x.n-1});setTimeout(showSentence,50)">✏️ Sentence</button> <button onclick="speak('${x.word.replace(/'/g,"\\'")}')">🔊</button></div></div>`).join("")}
+
+function addNewWord() {
+    let w = document.getElementById('newWord').value.trim();
+    let m = document.getElementById('newMeaning').value.trim();
+    let h = document.getElementById('newHindi').value.trim();
+    let s = document.getElementById('newSentence').value.trim();
+
+    if(!w || !m) {
+        alert("Please provide at least the English Word and Meaning.");
+        return;
+    }
+
+    let newEntry = {
+        n: words.length + 1,
+        word: w,
+        meaning: m,
+        hindi: h,
+        sentence: s,
+        sentenceHindi: ""
+    };
+
+    words.push(newEntry);
+    
+    document.getElementById('newWord').value = '';
+    document.getElementById('newMeaning').value = '';
+    document.getElementById('newHindi').value = '';
+    document.getElementById('newSentence').value = '';
+
+    initRangeSelectors();
+    render();
+    alert(`Success! "${w}" added to the list.`);
+}
+
+let autoPlay=false;
+let autoTimer=null;
+
+function updateAutoStatus(text){
+  const el=document.getElementById("autoStatus");
+  if(el) el.textContent=text;
+}
+
+function toggleAutoPlay(){
+  if(autoPlay){ stopAutoPlay(); return; }
+  startSelectedAutoPlay();
+}
+
+function stopAutoPlay(){
+  autoPlay=false;
+  clearTimeout(autoTimer);
+  autoTimer=null;
+  safeCancel();
+  const btn=document.getElementById("autoPlayBtn");
+  if(btn) btn.textContent="▶️ Auto Play All";
+  updateAutoStatus("Auto Play is off");
+}
+
+let rangeStart=1, rangeEnd=50;
+
+function initRangeSelectors(){
+  const a=document.getElementById("rangeStart"), b=document.getElementById("rangeEnd");
+  if(!a||!b)return;
+  
+  let prevA = a.value || "1";
+  let prevB = b.value || "10";
+  
+  a.innerHTML = "";
+  b.innerHTML = "";
+  
+  for(let n=1;n<=words.length;n++){
+    a.add(new Option(n,n));
+    b.add(new Option(n,n));
+  }
+  
+  a.value = Math.min(parseInt(prevA), words.length);
+  b.value = Math.min(parseInt(prevB) > words.length ? words.length : parseInt(prevB), words.length);
+  
+  a.onchange=()=>{ if(parseInt(a.value)>parseInt(b.value)) b.value=a.value; };
+  b.onchange=()=>{ if(parseInt(b.value)<parseInt(a.value)) a.value=b.value; };
+}
+
+function getSelectedRange(){
+  rangeStart=parseInt(document.getElementById("rangeStart").value);
+  rangeEnd=parseInt(document.getElementById("rangeEnd").value);
+  return {start:rangeStart,end:rangeEnd};
+}
+
+function startSelectedLearning(){
+  if(autoPlay) stopAutoPlay();
+  const r=getSelectedRange();
+  i=r.start-1;
+  show();
+  document.getElementById("flash").scrollIntoView({behavior:"smooth"});
+  updateAutoStatus("📖 Learning words "+r.start+"–"+r.end);
+}
+
+function selectedWords(){
+  const r=getSelectedRange();
+  return words.slice(r.start-1,r.end);
+}
+
+function startSelectedAutoPlay(){
+  const r=getSelectedRange();
+  i=r.start-1;
+  autoPlay=true;
+  document.getElementById("autoPlayBtn").textContent="⏸ Pause";
+  playSelectedAutomatically(r.start-1,r.end-1);
+}
+
+function playSelectedAutomatically(index,endIndex){
+  if(!autoPlay)return;
+  i=index;
+  const x=words[i];
+  updateAutoStatus("🔊 Reading: "+x.word+" — Word "+(i+1)+" of "+(endIndex+1));
+  show();
+  
+  safeCancel();
+  
+  const u = new SpeechSynthesisUtterance(x.word+". "+x.meaning+". " + (x.hindi ? "हिंदी: "+x.hindi : ""));
+  window.activeSpeechUtterance = u; 
+  
+  u.lang="en-IN"; 
+  u.rate=selectedRate;
+  u.pitch=selectedVoiceMode==="female"?1.08:selectedVoiceMode==="male"?0.92:1.0;
+  
+  const v=chooseVoice(selectedVoiceMode); if(v)u.voice=v;
+  
+  u.onend=()=>{
+    if(!autoPlay)return;
+    if(i>=endIndex){
+      autoPlay=false;
+      document.getElementById("autoPlayBtn").textContent="▶️ Auto Play All";
+      updateAutoStatus("🎉 Completed range!");
+      return;
+    }
+    autoTimer=setTimeout(()=>playSelectedAutomatically(i+1,endIndex),700);
+  };
+  
+  u.onerror=()=>{if(autoPlay&&i<endIndex)autoTimer=setTimeout(()=>playSelectedAutomatically(i+1,endIndex),700)};
+  
+  setTimeout(() => { speechSynthesis.speak(u); }, 10);
+}
+
+/* --- FLYING GAME LOGIC --- */
+let flyingScore = 0;
+let flyingTarget = null;
+let flyingGameActive = false;
+let flyingRoundTimer = null;
+let gameSpeedMultiplier = 1;
+
+function updateGameSpeed() {
+    gameSpeedMultiplier = parseFloat(document.getElementById("gameSpeedSelect").value);
+    document.getElementById("gameSpeedSelect").blur();
+}
+
+function startFlyingGame() {
+    if(autoPlay) stopAutoPlay();
+    safeCancel();
+    
+    flyingGameActive = true;
+    flyingScore = 0;
+    gameSpeedMultiplier = parseFloat(document.getElementById("gameSpeedSelect").value);
+    document.getElementById("flyScore").textContent = flyingScore;
+    document.getElementById("flyingGame").classList.remove("hidden");
+    
+    nextFlyingRound();
+}
+
+function stopFlyingGame() {
+    flyingGameActive = false;
+    clearTimeout(flyingRoundTimer);
+    safeCancel();
+    document.getElementById("flyContainer").innerHTML = "";
+    document.getElementById("flyingGame").classList.add("hidden");
+}
+
+function nextFlyingRound() {
+    if(!flyingGameActive) return;
+    
+    const container = document.getElementById("flyContainer");
+    container.innerHTML = ""; 
+    
+    let pool = selectedWords();
+    if(pool.length < 4) pool = words; 
+    
+    flyingTarget = pool[Math.floor(Math.random() * pool.length)];
+    
+    document.getElementById("flyInstruction").textContent = "Find: " + flyingTarget.word;
+    speak("Click the box for " + flyingTarget.word + ". " + flyingTarget.meaning);
+    
+    let options = [flyingTarget];
+    while(options.length < 4) {
+        let rand = pool[Math.floor(Math.random() * pool.length)];
+        if(!options.includes(rand)) options.push(rand);
+    }
+    
+    options.sort(() => Math.random() - 0.5);
+    
+    const positions = [5, 30, 55, 75]; 
+    positions.sort(() => Math.random() - 0.5); 
+    
+    options.forEach((opt, index) => {
+        let bubble = document.createElement("div");
+        bubble.className = "flying-bubble";
+        bubble.style.left = positions[index] + "%";
+        bubble.style.animationDelay = (Math.random() * 1.5) + "s";
+        
+        let animDuration = (8 + Math.random() * 4) * gameSpeedMultiplier;
+        bubble.style.animationDuration = animDuration + "s";
+        
+        bubble.innerHTML = `<h3>${opt.word}</h3><p>${opt.meaning}</p>`;
+        
+        bubble.onclick = function() {
+            if(opt.word === flyingTarget.word) {
+                flyingScore++;
+                document.getElementById("flyScore").textContent = flyingScore;
+                bubble.style.background = "#dcfce7";
+                bubble.style.borderColor = "#22c55e";
+                speak("Correct! " + opt.word);
+                clearTimeout(flyingRoundTimer);
+                setTimeout(nextFlyingRound, 1000);
+            } else {
+                bubble.style.background = "#fee2e2";
+                bubble.style.borderColor = "#ef4444";
+                speak("Not quite.");
+            }
+        };
+        
+        container.appendChild(bubble);
+    });
+
+    flyingRoundTimer = setTimeout(() => {
+        if(flyingGameActive) {
+            speak("Time is up. Let's try another.");
+            nextFlyingRound();
+        }
+    }, 13000 * gameSpeedMultiplier);
+}
+
+function showSentence(){
+  const x=words[i];
+  if(!x.sentence) {
+      alert("No sentence available for this word.");
+      return;
+  }
+  document.getElementById("sentenceBox").classList.remove("hidden");
+  document.getElementById("sentenceEnglish").textContent=x.sentence;
+  document.getElementById("sentenceHindi").textContent=x.sentenceHindi ? "हिंदी: "+x.sentenceHindi : "";
+  document.getElementById("sentenceBox").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+function hearSentence(){ speak(words[i].sentence); }
+function hearSentenceHindi(){ if(words[i].sentenceHindi) speakHindi(words[i].sentenceHindi); }
+
+function exportToExcel() {
+    let csvContent = "\uFEFFWord,Meaning,Hindi,Example Sentence,Example Sentence Hindi\n";
+
+    words.forEach(row => {
+        let w = `"${(row.word || "").replace(/"/g, '""')}"`;
+        let m = `"${(row.meaning || "").replace(/"/g, '""')}"`;
+        let h = `"${(row.hindi || "").replace(/"/g, '""')}"`;
+        let s = `"${(row.sentence || "").replace(/"/g, '""')}"`;
+        let sh = `"${(row.sentenceHindi || "").replace(/"/g, '""')}"`;
+
+        csvContent += `${w},${m},${h},${s},${sh}\n`;
+    });
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "Vocabulary_List.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+initRangeSelectors();
+show();
+render();
+</script>
+</body>
+</html>

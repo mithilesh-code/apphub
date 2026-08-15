@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Application Hosting Dashboard — Hub</title>
+<style>
+:root {
+  --bg: linear-gradient(135deg, #f0f4ff, #e0e7ff);
+  --panel: #ffffff;
+  --text: #1e293b;
+  --muted: #64748b;
+  --accent: #4f46e5;
+  --border: #c7d2fe;
+  --shadow: 0 10px 30px rgba(79, 70, 229, 0.1);
+}
+
+body.dark {
+  --bg: linear-gradient(135deg, #0f172a, #1e1b4b);
+  --panel: #1e293b;
+  --text: #f8fafc;
+  --muted: #94a3b8;
+  --accent: #818cf8;
+  --border: #334155;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+body.ocean {
+  --bg: linear-gradient(135deg, #e0f2fe, #bae6fd);
+  --panel: #f0f9ff;
+  --text: #0369a1;
+  --muted: #0284c7;
+  --accent: #0284c7;
+  --border: #7dd3fc;
+  --shadow: 0 10px 30px rgba(2, 132, 199, 0.15);
+}
+
+body.sunset {
+  --bg: linear-gradient(135deg, #fef3c7, #ffedd5);
+  --panel: #fffbeb;
+  --text: #7c2d12;
+  --muted: #c2410c;
+  --accent: #ea580c;
+  --border: #fde68a;
+  --shadow: 0 10px 30px rgba(234, 88, 12, 0.15);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  transition: background 0.3s, color 0.3s;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.brand h1 { margin: 0; font-size: 24px; color: var(--accent); }
+.brand p { margin: 4px 0 0; font-size: 14px; color: var(--muted); }
+
+.nav-tools {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: none;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.2s, opacity 0.2s;
+}
+.btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn.secondary { background: var(--panel); color: var(--text); border: 1px solid var(--border); }
+
+select {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px;
+  flex: 1;
+  width: 100%;
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: 40px;
+}
+.hero h2 { font-size: 36px; margin-bottom: 10px; color: var(--text); }
+.hero p { font-size: 18px; color: var(--muted); max-width: 700px; margin: 0 auto; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+.card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.15); }
+
+.card h3 { margin-top: 0; font-size: 20px; color: var(--accent); }
+.card p { color: var(--muted); line-height: 1.5; font-size: 14px; margin-bottom: 20px; }
+
+.badge-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.badge {
+  background: rgba(79, 70, 229, 0.1);
+  color: var(--accent);
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  color: var(--muted);
+  font-size: 14px;
+  border-top: 1px solid var(--border);
+  background: var(--panel);
+}
+
+@media(max-width: 600px) {
+  header { padding: 15px 20px; flex-direction: column; align-items: stretch; text-align: center; }
+  .nav-tools { justify-content: center; }
+}
+</style>
+</head>
+<body id="pageBody">
+
+<header>
+  <div class="brand">
+    <h1>🚀 Web Application Hub</h1>
+  </div>
+  <div class="nav-tools">
+    <select id="themeSelect" onchange="switchTheme(this.value)">
+      <option value="light">☀️ Light Theme</option>
+      <option value="dark">🌙 Dark Mode</option>
+      <option value="ocean">🌊 Ocean Blue</option>
+      <option value="sunset">🌅 Sunset Warm</option>
+    </select>
+  </div>
+</header>
+
+<div class="container">
+  <div class="hero">
+    <h2>Hosted Applications Directory</h2>
+    <p>Select an application below to launch language practice, reading tools, or interactive learning modules.</p>
+  </div>
+
+  <div class="grid">
+    <!-- Application 1 -->
+    <div class="card">
+      <div>
+        <div class="badge-row">
+          <span class="badge">Education</span>
+          <span class="badge">Interactive Audio</span>
+        </div>
+        <h3>Grade 3 Vocabulary Learning Fun</h3>
+        <p>An interactive learning application designed for children to hear, learn, practice, and remember grade 3 vocabulary words with speech synthesis, Indian voice controls, spelling challenges, and flying game modes[cite: 1].</p>
+      </div>
+      <a href="vocabulary-app.html" class="btn">Launch Application ➜</a>
+    </div>
+
+    <!-- Application 2 -->
+    <div class="card">
+      <div>
+        <div class="badge-row">
+          <span class="badge">E-Reader & TTS</span>
+          <span class="badge">Multilingual</span>
+        </div>
+        <h3>SMSK Book Reader</h3>
+        <p>A comprehensive book reader and speech platform supporting English, Hindi, Sanskrit, Arabic, and other browser-supported languages with advanced text-to-speech synchronization, PDF/DOCX support, and rich editing toolbar tools[cite: 2].</p>
+      </div>
+      <a href="book-reader-app.html" class="btn">Launch Application ➜</a>
+    </div>
+
+    <!-- Application 3 -->
+    <div class="card">
+      <div>
+        <div class="badge-row">
+          <span class="badge">Language Skills</span>
+          <span class="badge">Grammar & Phonics</span>
+        </div>
+        <h3>EnglishLearning</h3>
+        <p>A dedicated platform focused on improving grammar, vocabulary expansion, reading comprehension, and pronunciation exercises tailored for young learners.</p>
+      </div>
+      <a href="english-learning-app.html" class="btn">Launch Application ➜</a>
+    </div>
+
+    <!-- Application 4 -->
+    <div class="card">
+      <div>
+        <div class="badge-row">
+          <span class="badge">Mathematics</span>
+          <span class="badge">Logic & Numbers</span>
+        </div>
+        <h3>MathFun</h3>
+        <p>An engaging math practice tool featuring interactive arithmetic challenges, number puzzles, and playful logic games to build strong foundational math skills.</p>
+      </div>
+      <a href="math-fun-app.html" class="btn">Launch Application ➜</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>&copy; 2026 Santiva Technologies • Hosting Server Directory. All rights reserved.</p>
+</footer>
+
+<script>
+function switchTheme(theme) {
+  const body = document.getElementById('pageBody');
+  body.className = '';
+  if (theme !== 'light') {
+    body.classList.add(theme);
+  }
+  localStorage.setItem('hub_theme', theme);
+}
+
+// Load saved theme on startup
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('hub_theme') || 'light';
+  document.getElementById('themeSelect').value = saved;
+  switchTheme(saved);
+});
+</script>
+</body>
+</html>

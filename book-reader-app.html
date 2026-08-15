@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMSK Book Reader</title>
+<style>
+:root{--bg:#f5f7fb;--panel:#fff;--text:#172033;--muted:#64748b;--accent:#2563eb;--border:#dbe3ef;--reader:#fff;--readerText:#172033;--shadow:0 10px 30px rgba(15,23,42,.08)}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+body.dark{--bg:#0b1220;--panel:#111827;--text:#e5e7eb;--muted:#9ca3af;--border:#263244;--reader:#0f172a;--readerText:#e5e7eb;--shadow:0 10px 30px rgba(0,0,0,.3)}
+.app{max-width:1850px;margin:auto;padding:18px}.top{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:14px}.brand h1{margin:0;font-size:25px}.brand small{color:var(--muted)}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow)}
+.btn{border:1px solid var(--border);background:var(--panel);color:var(--text);padding:6px 9px;border-radius:6px;cursor:pointer;font-weight:600;font-size:12px;display:inline-flex;align-items:center;gap:4px;user-select:none;}
+.btn:hover{border-color:var(--accent)}.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+.grid{display:grid;grid-template-columns:300px 1fr 260px;gap:14px;margin-top:14px}
+.panel{padding:14px}.controls h3{margin:4px 0 12px}.control{margin:13px 0}.control label{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-bottom:6px}input[type=range]{width:100%;cursor:pointer}select,input[type=text],input[type=number],textarea{width:100%;border:1px solid var(--border);border-radius:9px;background:var(--panel);color:var(--text);padding:9px}
+.drop{border:2px dashed var(--border);padding:14px;text-align:center;border-radius:11px;color:var(--muted);cursor:pointer}.drop.drag{border-color:var(--accent);background:rgba(37,99,235,.08)}
+
+.reader-wrap{position:relative;overflow:hidden;border-radius:14px;background:var(--reader);height:calc(100vh - 165px);min-height:500px;border:1px solid var(--border)}
+.reader{height:100%;overflow-y:auto;overflow-x:hidden;padding:20px 5%;position:relative;scroll-behavior:smooth}
+.book{width:100%;white-space:pre-wrap;font-size:26px;line-height:1.85;color:var(--readerText);padding:40px 0 40px}
+.book p{position:relative;margin:0 0 1.2em;cursor:pointer;transition:background .15s ease,padding .15s ease;border-radius:6px;padding:6px 8px;white-space:pre-wrap;}
+.book p:hover{background:rgba(37,99,235,.06)}
+
+#editToolbar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  background: var(--panel);
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  margin-bottom: 12px;
+  font-size: 12px;
+}
+.toolbar-group {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+  border-right: 1px solid var(--border);
+  padding-right: 6px;
+  margin-right: 3px;
+  flex-wrap: wrap;
+}
+.toolbar-group:last-child {
+  border-right: none;
+  padding-right: 0;
+  margin-right: 0;
+}
+.toolbar-select, .toolbar-color {
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  padding: 4px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.empty{height:100%;display:grid;place-items:center;color:var(--muted);text-align:center;padding:30px}.status{position:absolute;left:14px;bottom:12px;background:rgba(0,0,0,.55);color:#fff;border-radius:999px;padding:6px 10px;font-size:12px;z-index:4}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:rgba(37,99,235,.1);color:var(--accent);font-size:12px}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.grow{flex:1}.hidden{display:none !important;}.hint{font-size:12px;color:var(--muted);line-height:1.5}.danger{color:#dc2626}
+.progress{height:8px;background:var(--border);border-radius:5px;overflow:hidden;margin-top:8px;cursor:pointer;position:relative}
+.progress>i{display:block;height:100%;width:0;background:var(--accent);pointer-events:none}
+
+.fullscreen .reader-wrap{height:100vh;border:0;border-radius:0}
+.fullscreen .app{max-width:none;padding:0}
+.fullscreen .top,.fullscreen .grid>.controls,.fullscreen .grid>.toolbar-panel{display:none}
+.fullscreen .grid{display:block;margin:0}
+.fullscreen .reader{height:100vh;padding:20px 8%}
+.fullscreen .book{padding:40px 0 40px}
+
+@media(max-width:1200px){.grid{grid-template-columns:300px 1fr}.toolbar-panel{grid-column:1/-1}}
+@media(max-width:900px){.grid{grid-template-columns:1fr}.reader-wrap{height:65vh}.book{font-size:21px;padding:40px 4% 40px}}
+
+.reading-word{
+  background:rgba(250,204,21,.45);
+  color:inherit;
+  border-radius:5px;
+  padding:1px 3px;
+  box-shadow:0 0 0 2px rgba(250,204,21,.18);
+  transition:background .15s ease;
+}
+.reading-paragraph{box-shadow:0 0 0 3px rgba(37,99,235,.12);border-radius:8px;padding:6px 8px;}
+
+.fullscreen #fsBtn{
+  position:fixed;
+  top:14px;
+  right:14px;
+  z-index:9999;
+  background:rgba(17,24,39,.92);
+  color:#fff;
+  border-color:rgba(255,255,255,.25);
+  padding:11px 15px;
+  box-shadow:0 5px 18px rgba(0,0,0,.25);
+}
+
+#fsToolbar {
+  display: none;
+}
+.fullscreen #fsToolbar {
+  display: flex;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  background: rgba(17, 24, 39, 0.88);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 10px 18px;
+  border-radius: 999px;
+  gap: 10px;
+  align-items: center;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+}
+.fullscreen #fsToolbar button {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+}
+.fullscreen #fsToolbar button:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+#wordTooltip{
+  position:fixed;
+  display:none;
+  background:var(--panel);
+  color:var(--text);
+  border:1px solid var(--border);
+  padding:6px 12px;
+  border-radius:8px;
+  font-size:14px;
+  z-index:10000;
+  box-shadow:var(--shadow);
+  pointer-events:none;
+  transform:translate(-50%, -100%);
+  margin-top:-8px;
+  white-space:nowrap;
+  font-weight:600;
+}
+
+.show-marks p::after, .show-marks div::after {
+  content: " ¶";
+  color: var(--muted);
+  font-size: 0.8em;
+}
+</style>
+</head>
+<body class="dark">
+<div id="wordTooltip"></div>
+<div class="app">
+  <div class="top">
+    <div class="brand"><h1>📖 SMSK Book Reader</h1><small>Read English, Hindi, Sanskrit, Arabic and other browser-supported languages aloud. (Double-click any word to start reading)</small></div>
+    <div class="row">
+      <button class="btn" onclick="location.href='index.html'">🏠 Home</button>
+      <span id="langBadge" class="badge">Auto language</span>
+      <button class="btn" id="editModeBtn">✏️ Edit Mode</button>
+      <button class="btn hidden" id="cancelEditBtn">❌ Discard</button>
+      <button class="btn" id="themeBtn">☀️ Light</button>
+      <button class="btn" id="fsBtn">⛶ Full screen</button>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- Left Panel: Book & Controls -->
+    <aside class="panel controls">
+      <h3>Book & Controls</h3>
+      
+      <!-- 1. Content Source -->
+      <div class="control">
+        <label>1. Content Source</label>
+        <div id="drop" class="drop">📂 Click or drag files here<br><small>PDF, DOCX, TXT, HTML, RTF</small></div>
+        <input id="file" type="file" class="hidden" accept=".pdf,.docx,.txt,.html,.htm,.rtf,.md,.text">
+      </div>
+      <div class="control">
+        <label>Paste Book Content</label>
+        <textarea id="paste" placeholder="Paste text here..." style="min-height:70px;resize:vertical;font-family:inherit"></textarea>
+        <button class="btn primary" id="loadPaste" style="width:100%;margin-top:6px">Load Pasted Text</button>
+      </div>
+
+      <!-- 2. Language & Voice Settings -->
+      <div class="control">
+        <label>2. Language <span id="detected">Auto detect</span></label>
+        <select id="lang">
+          <option value="auto">Auto detect</option><option value="hi-IN">🇮🇳 Hindi Book — हिन्दी</option><option value="en-IN">English — India</option><option value="en-US">English — US</option>
+          <option value="sa-IN">Sanskrit — India</option><option value="ar-SA">Arabic</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Voice & Audio</label>
+        <select id="voice"><option>Loading voices...</option></select>
+        <button class="btn" id="testHindi" style="width:100%;margin-top:6px">🔊 Test Hindi Voice</button>
+      </div>
+      <div class="control"><label>Reading Speed <span id="speedVal">1.0×</span></label><input id="speed" type="range" min=".3" max="3" value="1" step=".1"></div>
+      <div class="control"><label>Volume <span id="volVal">100%</span></label><input id="volume" type="range" min="0" max="1" value="1" step=".05"></div>
+
+      <!-- 3. Translation Options -->
+      <div class="control">
+        <label>3. Translation Options</label>
+        <select id="translatorEngine" style="margin-bottom:6px;">
+          <option value="google">Google Translate (Free API)</option>
+          <option value="mymemory">MyMemory API</option>
+        </select>
+        <div class="row" style="gap:6px;margin-bottom:6px;">
+          <button class="btn grow" id="translateEnBtn">🌐 English</button>
+          <button class="btn grow" id="translateHiBtn">🌐 Hindi</button>
+        </div>
+        <button class="btn" id="restoreOriginalBtn" style="width:100%;margin-bottom:6px">🔄 Restore Original</button>
+        <label style="justify-content:flex-start;gap:6px;margin:0;color:var(--text);font-size:12px;cursor:pointer">
+          <input id="enableTranslation" type="checkbox" checked> Enable hover word translation
+        </label>
+      </div>
+
+      <!-- 4. Reading Focus & Formatting -->
+      <div class="control">
+        <label>4. Reading Focus & Formatting</label>
+        <div class="row" style="margin-bottom:8px;">
+          <label style="justify-content:flex-start;gap:6px;margin:0;color:var(--text);font-size:12px;cursor:pointer">
+            <input id="focusWord" type="checkbox" checked> Spoken word
+          </label>
+          <label style="justify-content:flex-start;gap:6px;margin:0;color:var(--text);font-size:12px;cursor:pointer">
+            <input id="focusParagraph" type="checkbox" checked> Paragraph
+          </label>
+        </div>
+        <button class="btn" id="oneLineBtn" style="width:100%">📏 Convert to One Line</button>
+      </div>
+
+      <!-- 5. Display / Font Size -->
+      <div class="control"><label>5. Font Size <span id="fontVal">26px</span></label><input id="font" type="range" min="16" max="52" value="26"></div>
+      <div id="error" class="hint danger"></div>
+    </aside>
+
+    <!-- Center Panel: Reader -->
+    <main>
+      <div class="panel" style="margin-bottom:10px">
+        <div class="row"><strong id="title">No book loaded</strong><span class="grow"></span><span id="wordCount" class="badge">0 words</span></div>
+        <div class="progress" id="progressBar" title="Click or drag to scrub through book"><i id="progress"></i></div>
+      </div>
+      <div class="reader-wrap" id="readerWrap">
+        <div class="reader" id="reader">
+          <!-- Comprehensive Word-like Ribbon Edit Toolbar -->
+          <div id="editToolbar" class="hidden">
+            <!-- Undo/Redo Group -->
+            <div class="toolbar-group">
+              <button class="btn" id="editUndoBtn" title="Undo: Reverse last action">↶ Undo</button>
+              <button class="btn" id="editRedoBtn" title="Redo: Reapply undone action">↷ Redo</button>
+            </div>
+            <!-- Clipboard Group -->
+            <div class="toolbar-group">
+              <button class="btn" id="editPasteBtn" title="Paste: Insert copied or cut content">📋 Paste</button>
+              <button class="btn" id="editCutBtn" title="Cut: Remove selected text and place on clipboard">✂️ Cut</button>
+              <button class="btn" id="editCopyBtn" title="Copy: Duplicate selected text to clipboard">📑 Copy</button>
+              <button class="btn" id="editFormatPainterBtn" title="Format Painter: Copy formatting from one place and apply to another">🖌️ Painter</button>
+            </div>
+            <!-- Font Group -->
+            <div class="toolbar-group">
+              <select id="editFontFace" class="toolbar-select" title="Font Face: Select typeface">
+                <option value="system-ui">Default</option>
+                <option value="Calibri">Calibri</option>
+                <option value="Arial">Arial</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Courier New">Courier New</option>
+              </select>
+              <select id="editFontSize" class="toolbar-select" title="Font Size: Change point size">
+                <option value="12px">12px</option>
+                <option value="14px">14px</option>
+                <option value="16px">16px</option>
+                <option value="20px">20px</option>
+                <option value="26px" selected>26px</option>
+                <option value="32px">32px</option>
+              </select>
+              <button class="btn" id="editGrowFontBtn" title="Grow Font: Increase size">A+</button>
+              <button class="btn" id="editShrinkFontBtn" title="Shrink Font: Decrease size">A−</button>
+              <button class="btn" id="editChangeCaseBtn" title="Change Case: Switch between uppercase/lowercase">Aa</button>
+              <button class="btn" id="editClearFormatBtn" title="Clear All Formatting: Remove all styles">🧹 Clear</button>
+              <button class="btn" id="editBoldBtn" title="Bold: Make text bold"><b>B</b></button>
+              <button class="btn" id="editItalicBtn" title="Italic: Italicize text"><i>I</i></button>
+              <button class="btn" id="editUnderlineBtn" title="Underline: Add underline"><u>U</u></button>
+              <button class="btn" id="editStrikethroughBtn" title="Strikethrough: Draw horizontal line"><s>S</s></button>
+              <button class="btn" id="editSubscriptBtn" title="Subscript: Lowered text">X₂</button>
+              <button class="btn" id="editSuperscriptBtn" title="Superscript: Raised text">X²</button>
+              <input type="color" id="editHighlightColor" class="toolbar-color" value="#facc15" title="Text Highlight Color">
+              <input type="color" id="editFontColor" class="toolbar-color" value="#2563eb" title="Font Color">
+            </div>
+            <!-- Paragraph Group -->
+            <div class="toolbar-group">
+              <button class="btn" id="editBulletsBtn" title="Bullets: Start bulleted list">• List</button>
+              <button class="btn" id="editNumberingBtn" title="Numbering: Start numbered list">1. List</button>
+              <button class="btn" id="editMultilevelBtn" title="Multilevel List: Hierarchical list">≡ Multi</button>
+              <button class="btn" id="editDecreaseIndentBtn" title="Decrease Indent">⬅ Indent</button>
+              <button class="btn" id="editIncreaseIndentBtn" title="Increase Indent">➡ Indent</button>
+              <button class="btn" id="editSortBtn" title="Sort: Alphabetize or numerical sort">AZ Sort</button>
+              <button class="btn" id="editShowHideBtn" title="Show/Hide (§): Display formatting marks">¶ Marks</button>
+              <button class="btn" id="editAlignLeftBtn" title="Align Left">⬅ Align</button>
+              <button class="btn" id="editCenterBtn" title="Center">🎝 Center</button>
+              <button class="btn" id="editAlignRightBtn" title="Align Right">➡ Align</button>
+              <button class="btn" id="editJustifyBtn" title="Justify">🔲 Justify</button>
+              <button class="btn" id="editSpacingBtn" title="Line and Paragraph Spacing">↕️ Space</button>
+              <button class="btn" id="editShadingBtn" title="Shading: Add background color">🎨 Shade</button>
+              <button class="btn" id="editBorderBtn" title="Bottom Border / Borders">🔲 Border</button>
+            </div>
+            <!-- Styles Group -->
+            <div class="toolbar-group">
+              <select id="editStylesGallery" class="toolbar-select" title="Styles Gallery: Presets">
+                <option value="p">Normal</option>
+                <option value="h1">Heading 1</option>
+                <option value="h2">Heading 2</option>
+                <option value="h3">Heading 3</option>
+                <option value="blockquote">Quote / Title</option>
+              </select>
+              <button class="btn" id="editMoreStylesBtn" title="More Styles: Expand options">More Styles</button>
+            </div>
+            <!-- Editing Group -->
+            <div class="toolbar-group">
+              <input id="editFindInput" type="text" placeholder="Find..." style="max-width:80px; padding:4px 6px; font-size:12px;">
+              <button class="btn" id="editFindBtn" title="Find: Search for words">🔍</button>
+              <button class="btn" id="editReplaceBtn" title="Replace: Find and replace">🔄</button>
+              <button class="btn" id="editSelectAllBtn" title="Select All">☑️ All</button>
+            </div>
+            <span class="grow"></span>
+            <span id="editStats" class="badge">0 chars</span>
+          </div>
+
+          <div class="empty" id="empty">Upload a book or paste text to begin.<br><small>Double-click any word to start reading from that cursor point.</small></div>
+          <div class="book hidden" id="book"></div>
+          <div id="editTextarea" class="hidden" contenteditable="true" spellcheck="false" style="width:100%;height:calc(100% - 60px);outline:none;overflow-y:auto;white-space:pre-wrap;padding:20px 0;font-family:inherit;font-size:inherit;line-height:inherit;"></div>
+        </div>
+        <div class="status" id="status">Ready</div>
+      </div>
+    </main>
+
+    <!-- Right Panel: Playback & Audio Controls -->
+    <aside class="panel controls toolbar-panel">
+      <h3>Playback & Audio</h3>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <button class="btn primary" id="playBtn" style="width:100%">▶ Play</button>
+        <button class="btn" id="pauseBtn" style="width:100%">⏸ Pause</button>
+        <button class="btn" id="stopBtn" style="width:100%">⏹ Stop</button>
+        <button class="btn" id="backBtn" style="width:100%">↶ Restart</button>
+        <div class="row" style="gap:6px;">
+          <button class="btn grow" id="prevBtn" title="Previous section">⏮ Prev</button>
+          <button class="btn grow" id="nextBtn" title="Next section">⏭ Next</button>
+        </div>
+        <button class="btn" id="playFromViewBtn" style="width:100%">📍 Play from View</button>
+        <hr style="border:0;border-top:1px solid var(--border);margin:4px 0;">
+        <div class="row" style="gap:6px;">
+          <button class="btn grow" id="muteBtn">🔊 Mute</button>
+          <button class="btn" id="volDownBtn" title="Volume Down">🔉−</button>
+          <button class="btn" id="volUpBtn" title="Volume Up">🔊+</button>
+        </div>
+        <div class="row" style="gap:6px;">
+          <button class="btn grow" id="fontDown">A−</button>
+          <button class="btn grow" id="fontUp">A+</button>
+        </div>
+        <div style="text-align:center;margin-top:6px;">
+          <span id="progressText" class="badge" style="font-size:14px;padding:6px 12px;">0%</span>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<!-- Fullscreen Floating Scroll-Through & Playback Bar -->
+<div id="fsToolbar">
+  <button id="fsPrevBtn" title="Previous section">⏮ Prev</button>
+  <button id="fsPlayBtn" title="Play / Pause">▶ Play</button>
+  <button id="fsNextBtn" title="Next section">Next ⏭</button>
+  <button id="fsRestartBtn" title="Restart">↶ Restart</button>
+  <span id="fsProgressBadge" class="badge" style="background:rgba(255,255,255,0.15);color:#fff;margin-left:4px;">0%</span>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let text="", originalText="", preEditText="", words=[], paragraphs=[], playing=false, paused=false;
+let fontSize=26, utterance=null, voices=[];
+let isMuted=false, preMuteVolume=1;
+let currentParagraphIndex = 0;
+let speechSessionId = 0;
+let isEditing = false;
+let formatPainterSnippet = "";
+let editStatsTimeout = null;
+
+const speechSupported='speechSynthesis' in window;
+const cleanText=s=>s.replace(/\u00ad/g,'').replace(/[ \t]+\n/g,'\n').replace(/\n{3,}/g,'\n\n').trim();
+function removePageNoise(s){
+  return cleanText(s
+    .replace(/^\s*(?:page|p\.?)\s*[\-–:]?\s*\d+\s*$/gim,'')
+    .replace(/^\s*\d+\s*$/gm,'')
+    .replace(/^\s*(?:chapter|अध्याय|पृष्ठ|صفحة)\s*[\-–:]?\s*\d+\s*$/gim));
+}
+function detectLang(s){
+  if(!s) return 'en-IN';
+  const counts={hi:0,ar:0,latin:0,other:0};
+  for(const c of s.slice(0,10000)){
+    const n=c.codePointAt(0);
+    if((n>=0x0900&&n<=0x097F)) counts.hi++;
+    else if((n>=0x0600&&n<=0x06FF)) counts.ar++;
+    else if(/[A-Za-z]/.test(c)) counts.latin++;
+    else if(/\p{L}/u.test(c)) counts.other++;
+  }
+  if(counts.ar>counts.hi && counts.ar>counts.latin) return 'ar-SA';
+  if(counts.hi>0 && counts.hi>=counts.latin*0.35) return 'hi-IN';
+  return 'en-IN';
+}
+
+function render(){
+  const bookEl = $('book');
+  bookEl.innerHTML='';
+  paragraphs=text.split(/\n\s*\n/).filter(Boolean);
+  if(!paragraphs.length) paragraphs=[text];
+  
+  let globalWordCounter = 0;
+  paragraphs.forEach((p,i)=>{
+    const el=document.createElement('p');
+    el.dataset.i=i;
+    el.title="Click to play from this section (Double-click any word to start from cursor)";
+    el.onclick = (e) => {
+      if(isEditing) return;
+      currentParagraphIndex = i;
+      scrollToParagraph(i);
+      playFromParagraph(i);
+    };
+
+    const frag=document.createDocumentFragment();
+    const tokens=p.split(/(\s+)/);
+    tokens.forEach(tok=>{
+      if(/^\s+$/.test(tok)){frag.appendChild(document.createTextNode(tok));}
+      else if(tok){
+        const span=document.createElement('span');
+        span.className='word';
+        span.textContent=tok;
+        span.dataset.wordIndex = globalWordCounter++;
+        frag.appendChild(span);
+      }
+    });
+    el.appendChild(frag);
+    bookEl.appendChild(el);
+  });
+  words=text.split(/\s+/).filter(Boolean); 
+  $('wordCount').textContent=words.length.toLocaleString()+' words';
+  bookEl.classList.remove('hidden'); 
+  $('empty').classList.add('hidden'); 
+  $('title').textContent='Loaded book';
+  $('reader').scrollTop=0;
+  currentParagraphIndex = 0;
+  updateProgress();
+}
+
+function updateProgress(){
+  const reader=$('reader');
+  const max=Math.max(1, reader.scrollHeight - reader.clientHeight);
+  let p = Math.max(0, Math.min(1, reader.scrollTop / max));
+  $('progress').style.width=(p*100)+'%';
+  const pct = Math.round(p*100)+'%';
+  $('progressText').textContent = pct;
+  if($('fsProgressBadge')) $('fsProgressBadge').textContent = pct;
+}
+function setStatus(s){$('status').textContent=s}
+
+let focusWordEnabled=true, focusParagraphEnabled=true;
+
+function clearFocus(){
+  document.querySelectorAll('#book .reading-word').forEach(el=>el.classList.remove('reading-word'));
+  document.querySelectorAll('#book .reading-paragraph').forEach(el=>el.classList.remove('reading-paragraph'));
+}
+
+function getSpeechLang(){
+  const selected=$('lang').value;
+  return selected==='auto' ? detectLang(text) : selected;
+}
+
+function chooseVoice(lang){
+  const target=(lang||'en-IN').toLowerCase();
+  const base=target.split('-')[0];
+  const list=voices||[];
+
+  if(base === 'en'){
+    const ava = list.find(v => /microsoft ava|ava/i.test(v.name));
+    if(ava) return ava;
+  }
+
+  const exact=list.filter(v=>v.lang && v.lang.toLowerCase()===target);
+  if(exact.length)return exact[0];
+  const same=list.filter(v=>v.lang && v.lang.toLowerCase().startsWith(base+'-'));
+  if(same.length){
+    if(base==='hi'){
+      return same.find(v=>/hindi|india|hi-in/i.test(v.name+' '+v.lang))||same[0];
+    }
+    if(base==='en'){
+      return same.find(v=>/india|en-in/i.test(v.name+' '+v.lang))||same[0];
+    }
+    return same[0];
+  }
+  return list.find(v=>v.lang && v.lang.toLowerCase().startsWith(base))||null;
+}
+
+function getSelectedVoice() {
+  const selectedUri = $('voice').value;
+  if (selectedUri && voices.length) {
+    const matchedVoice = voices.find(v => v.voiceURI === selectedUri);
+    if (matchedVoice) return matchedVoice;
+  }
+  return chooseVoice(getSpeechLang());
+}
+
+function getGlobalWordIndexForParagraph(paragraphIndex) {
+  let count = 0;
+  const ps = document.querySelectorAll('#book p');
+  for (let i = 0; i < paragraphIndex && i < ps.length; i++) {
+    count += ps[i].querySelectorAll('.word').length;
+  }
+  return count;
+}
+
+function getParagraphIndexForWordIndex(targetWordIndex) {
+  let currentCount = 0;
+  const ps = document.querySelectorAll('#book p');
+  for (let i = 0; i < ps.length; i++) {
+    const wordsInPara = ps[i].querySelectorAll('.word').length;
+    if (targetWordIndex >= currentCount && targetWordIndex < currentCount + wordsInPara) {
+      return i;
+    }
+    currentCount += wordsInPara;
+  }
+  return 0;
+}
+
+function speakParagraphSentences(paraIndex, session){
+  if(session !== speechSessionId) return;
+  if(!playing || paraIndex >= paragraphs.length){
+    if(paraIndex >= paragraphs.length) {
+      setStatus('Finished');
+      stopReading();
+    }
+    return;
+  }
+  currentParagraphIndex = paraIndex;
+  const paraText = paragraphs[paraIndex];
+  const baseGlobalWordIdx = getGlobalWordIndexForParagraph(paraIndex);
+  
+  scrollToParagraph(paraIndex);
+
+  const sentences = paraText.match(/[^.!?।॥؟]+[.!?।॥؟]+|[^.!?।॥؟]+$/gu) || [paraText];
+  let sentenceIdx = 0;
+  let currentSentenceWordOffset = 0;
+
+  function speakNextSentence(){
+    if(session !== speechSessionId || !playing) return;
+    if(sentenceIdx >= sentences.length){
+      speakParagraphSentences(paraIndex + 1, session);
+      return;
+    }
+
+    const sentence = sentences[sentenceIdx++];
+    const sentenceWordCount = sentence.trim() ? sentence.trim().split(/\s+/).length : 0;
+    const absoluteSentenceWordIdx = baseGlobalWordIdx + currentSentenceWordOffset;
+
+    utterance = new SpeechSynthesisUtterance(sentence);
+    const lang = getSpeechLang();
+    const selectedVoice = getSelectedVoice();
+    if(selectedVoice) utterance.voice = selectedVoice;
+    utterance.lang = selectedVoice?.lang || lang;
+    utterance.rate = Number($('speed').value);
+    utterance.volume = isMuted ? 0 : Number($('volume').value);
+    utterance.pitch = 1;
+
+    utterance.onboundary = e => {
+      if(session !== speechSessionId) return;
+      if(e.name === 'word' && focusWordEnabled){
+        const before = sentence.slice(0, e.charIndex);
+        const spokenWordsCount = before.trim() ? before.trim().split(/\s+/).length : 0;
+        const targetWordIdx = absoluteSentenceWordIdx + spokenWordsCount;
+
+        const span = document.querySelector(`#book .word[data-word-index="${targetWordIdx}"]`);
+        if(span){
+          clearFocus();
+          const p = span.closest('p');
+          if(p && focusParagraphEnabled) {
+            p.classList.add('reading-paragraph');
+          }
+          span.classList.add('reading-word');
+        }
+      }
+    };
+
+    utterance.onend = () => {
+      if(session !== speechSessionId) return;
+      currentSentenceWordOffset += sentenceWordCount;
+      speakNextSentence();
+    };
+
+    utterance.onerror = e => {
+      if(session !== speechSessionId || !playing) return;
+      if(e.error !== 'interrupted') setStatus('Speech error: '+e.error);
+      currentSentenceWordOffset += sentenceWordCount;
+      setTimeout(speakNextSentence, 50);
+    };
+
+    speechSynthesis.speak(utterance);
+  }
+
+  speakNextSentence();
+}
+
+function getCurrentVisibleParagraphIndex(){
+  const readerRect=$('reader').getBoundingClientRect();
+  const readerMiddle=readerRect.top+readerRect.height/2;
+  const ps=[...document.querySelectorAll('#book p')];
+  if(!ps.length) return 0;
+  let closest=0, minDist=Infinity;
+  ps.forEach((p,idx)=>{
+    const rect=p.getBoundingClientRect();
+    const pMiddle=rect.top+rect.height/2;
+    const dist=Math.abs(pMiddle-readerMiddle);
+    if(dist<minDist){minDist=dist;closest=idx;}
+  });
+  return closest;
+}
+
+function scrollToParagraph(index){
+  const ps=[...document.querySelectorAll('#book p')];
+  if(ps[index]){
+    const reader = $('reader');
+    reader.scrollTo({ top: Math.max(0, ps[index].offsetTop - 30), behavior: 'smooth' });
+    updateProgress();
+  }
+}
+
+function playFromParagraph(startIndex){
+  if(!text||paragraphs.length===0){setStatus('Load a book first');return;}
+  speechSynthesis.cancel();
+  speechSessionId++;
+  const currentSession = speechSessionId;
+  startIndex=Math.max(0,Math.min(startIndex,paragraphs.length-1));
+  currentParagraphIndex = startIndex;
+  playing=true;
+  paused=false;
+  updatePlayButtonUI();
+  setStatus(`Playing from section ${startIndex + 1}`);
+  speakParagraphSentences(startIndex, currentSession);
+}
+
+function handleProgressBarClick(e){
+  if(!text) return;
+  const reader=$('reader');
+  const rect=$('progressBar').getBoundingClientRect();
+  const clickX=e.clientX-rect.left;
+  const ratio=Math.max(0,Math.min(1,clickX/rect.width));
+  const max=Math.max(0, reader.scrollHeight - reader.clientHeight);
+  
+  reader.scrollTop = max * ratio;
+  updateProgress();
+
+  const targetIdx=getCurrentVisibleParagraphIndex();
+  currentParagraphIndex = targetIdx;
+  if(playing){
+    playFromParagraph(targetIdx);
+  } else {
+    scrollToParagraph(targetIdx);
+  }
+}
+
+let isDraggingProgress=false;
+$('progressBar').onmousedown=e=>{isDraggingProgress=true;handleProgressBarClick(e);};
+window.addEventListener('mousemove',e=>{
+  if(!isDraggingProgress||!text)return;
+  const reader=$('reader');
+  const rect=$('progressBar').getBoundingClientRect();
+  const moveX=e.clientX-rect.left;
+  const ratio=Math.max(0,Math.min(1,moveX/rect.width));
+  const max=Math.max(0, reader.scrollHeight - reader.clientHeight);
+  reader.scrollTop = max * ratio;
+  updateProgress();
+});
+window.addEventListener('mouseup',()=>{
+  if(isDraggingProgress){
+    isDraggingProgress=false;
+    const targetIdx=getCurrentVisibleParagraphIndex();
+    currentParagraphIndex = targetIdx;
+    if(playing){
+      playFromParagraph(targetIdx);
+    }
+  }
+});
+
+function updatePlayButtonUI() {
+  const isPlayingActive = playing && !paused;
+  $('pauseBtn').textContent = isPlayingActive ? '⏸ Pause' : '▶ Pause';
+  if($('fsPlayBtn')) $('fsPlayBtn').textContent = isPlayingActive ? '⏸ Pause' : '▶ Play';
+}
+
+function play(){
+  if(!text){setStatus('Load a book first');return}
+  if(paused && speechSupported){
+    speechSynthesis.resume();
+    paused=false;
+    updatePlayButtonUI();
+    setStatus('Playing');
+    return;
+  }
+  playing=true;paused=false;
+  updatePlayButtonUI();
+  setStatus('Playing / reading aloud');
+  playFromParagraph(currentParagraphIndex);
+}
+
+function pause(){
+  if(!playing)return;
+  if(!paused){
+    speechSynthesis.pause();
+    paused=true;
+    $('pauseBtn').textContent='▶ Resume';
+    if($('fsPlayBtn')) $('fsPlayBtn').textContent='▶ Resume';
+    setStatus('Paused');
+  }else{
+    speechSynthesis.resume();
+    paused=false;
+    $('pauseBtn').textContent='⏸ Pause';
+    if($('fsPlayBtn')) $('fsPlayBtn').textContent='⏸ Pause';
+    setStatus('Playing');
+  }
+}
+
+function stopReading(){
+  playing=false;
+  paused=false;
+  speechSessionId++;
+  speechSynthesis.cancel();
+  clearFocus();
+  updatePlayButtonUI();
+  setStatus('Stopped');
+}
+
+function restart(){
+  stopReading();
+  currentParagraphIndex = 0;
+  $('reader').scrollTop=0;
+  updateProgress();
+  setStatus('Restarted');
+}
+
+function loadText(t,name='Pasted text'){
+  text=removePageNoise(t); 
+  if(!text){setStatus('No readable text found');return}
+  originalText = text;
+  $('title').textContent=name; const d=detectLang(text); $('detected').textContent=d; if($('lang').value==='auto') $('langBadge').textContent=d;
+  render(); setStatus('Ready');
+}
+
+async function loadFile(file) {
+  const errorEl = $('error');
+  if (errorEl) errorEl.textContent = '';
+  setStatus('Reading file...');
+
+  const ext = file.name.split('.').pop().toLowerCase();
+  try {
+    if (['txt', 'text', 'md', 'html', 'htm', 'rtf'].includes(ext)) {
+      const reader = new FileReader();
+      reader.onload = (e) => loadText(e.target.result, file.name);
+      reader.readAsText(file);
+    } else if (ext === 'docx') {
+      await loadMammoth();
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          if (typeof mammoth !== 'undefined') {
+            const res = await mammoth.extractRawText({ arrayBuffer: e.target.result });
+            loadText(res.value, file.name);
+          } else {
+            throw new Error('DOCX library unavailable.');
+          }
+        } catch (err) {
+          throw new Error('Could not parse DOCX file.');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    } else if (ext === 'pdf') {
+      await ensurePdfJsLoaded();
+      const arrayBuffer = await file.arrayBuffer();
+      const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+      const pdf = await loadingTask.promise;
+      
+      let allText = '';
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        
+        const items = content.items.sort((a, b) => {
+          const yA = a.transform[5];
+          const yB = b.transform[5];
+          if (Math.abs(yA - yB) > 5) {
+            return yB - yA;
+          }
+          return a.transform[4] - b.transform[4];
+        });
+
+        let lastY = null;
+        let pageText = '';
+        items.forEach(item => {
+          const currentY = item.transform[5];
+          if (lastY !== null) {
+            const yDiff = Math.abs(currentY - lastY);
+            if (yDiff > 16) {
+              pageText += '\n\n';
+            } else if (yDiff > 4) {
+              pageText += '\n';
+            } else {
+              pageText += (item.str.startsWith(' ') || pageText.endsWith(' ') ? '' : ' ');
+            }
+          }
+          pageText += item.str;
+          lastY = currentY;
+        });
+        allText += pageText + '\n\n';
+      }
+
+      if (!allText.trim()) {
+        throw new Error('PDF contains no readable text (it may be a scanned image).');
+      }
+      loadText(allText, file.name);
+    } else {
+      throw new Error('Unsupported file format. Please use PDF, DOCX, TXT, HTML, RTF, or Markdown.');
+    }
+  } catch (e) {
+    console.error(e);
+    if (errorEl) errorEl.textContent = e.message || String(e);
+    setStatus('Could not read file');
+  }
+}
+
+function loadMammoth(){
+  return new Promise((resolve,reject)=>{
+    if(window.mammoth)return resolve();
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js';
+    s.onload=resolve;
+    s.onerror=reject;
+    document.head.appendChild(s);
+  });
+}
+
+function ensurePdfJsLoaded() {
+  return new Promise((resolve, reject) => {
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      return resolve();
+    }
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    script.onload = () => {
+      if (typeof pdfjsLib !== 'undefined') {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+        resolve();
+      } else {
+        reject(new Error('Failed to initialize PDF engine.'));
+      }
+    };
+    script.onerror = () => reject(new Error('Failed to load PDF library from CDN.'));
+    document.head.appendChild(script);
+  });
+}
+
+function refreshVoices(){
+  voices = speechSupported ? speechSynthesis.getVoices().filter(v => !/albert/i.test(v.name)) : [];
+  const old = $('voice').value; 
+  $('voice').innerHTML = '';
+  
+  if(!voices.length){
+    $('voice').innerHTML = '<option value="">No voices found — browser/OS TTS required</option>';
+    return;
+  }
+  
+  const lang = $('lang').value === 'auto' ? detectLang(text) : $('lang').value;
+  const matching = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith(lang.slice(0, 2).toLowerCase()));
+  
+  const sortedVoices = [...(matching.length ? matching : voices)].sort((a, b) => {
+    if (/microsoft ava|ava/i.test(a.name)) return -1;
+    if (/microsoft ava|ava/i.test(b.name)) return 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  sortedVoices.forEach(v => {
+    const o = document.createElement('option');
+    o.value = v.voiceURI;
+    o.textContent = `${v.name} (${v.lang})${v.localService ? ' • local' : ''}`;
+    $('voice').appendChild(o);
+  });
+
+  if(old && [...$('voice').options].some(o => o.value === old)) {
+    $('voice').value = old;
+  } else {
+    const defaultVoice = chooseVoice(lang);
+    if(defaultVoice) {
+      $('voice').value = defaultVoice.voiceURI;
+    }
+  }
+}
+
+$('voice').onchange = () => {
+  if (playing) {
+    playFromParagraph(currentParagraphIndex);
+  }
+};
+
+function updateVolumeDisplay(){
+  const val=Number($('volume').value);
+  $('volVal').textContent=Math.round(val*100)+'%';
+  if(val>0 && isMuted){
+    isMuted=false;
+    $('muteBtn').textContent='🔊 Mute';
+  }
+}
+
+function applyVolumeChange(){
+  updateVolumeDisplay();
+  if(playing){
+    playFromParagraph(currentParagraphIndex);
+  }
+}
+
+function updateEditStats(immediate = false){
+  const run = () => {
+    requestAnimationFrame(() => {
+      const val = $('editTextarea').innerText;
+      const charCount = val.length;
+      const match = val.match(/\S+/g);
+      const wordCount = match ? match.length : 0;
+      $('editStats').textContent = `${charCount.toLocaleString()} chars | ${wordCount.toLocaleString()} words`;
+    });
+  };
+  if(immediate){
+    clearTimeout(editStatsTimeout);
+    run();
+  } else {
+    clearTimeout(editStatsTimeout);
+    editStatsTimeout = setTimeout(run, 300);
+  }
+}
+
+// Edit Mode Handler
+$('editModeBtn').onclick = (e) => {
+  e.preventDefault();
+  isEditing = !isEditing;
+  const editBtn = $('editModeBtn');
+  const cancelBtn = $('cancelEditBtn');
+  const bookEl = $('book');
+  const editArea = $('editTextarea');
+  const editToolbar = $('editToolbar');
+  
+  if (isEditing) {
+    if (playing) stopReading();
+    preEditText = text;
+    editArea.innerHTML = text.replace(/\n/g, '<br>');
+    updateEditStats(true);
+    bookEl.classList.add('hidden');
+    editToolbar.classList.remove('hidden');
+    editArea.classList.remove('hidden');
+    editBtn.textContent = '💾 Save Edits';
+    editBtn.classList.add('primary');
+    cancelBtn.classList.remove('hidden');
+    setStatus('Edit mode active. Rich text ribbon tools ready.');
+  } else {
+    text = removePageNoise(editArea.innerText);
+    editArea.classList.add('hidden');
+    editToolbar.classList.add('hidden');
+    bookEl.classList.remove('hidden');
+    editBtn.textContent = '✏️ Edit Mode';
+    editBtn.classList.remove('primary');
+    cancelBtn.classList.add('hidden');
+    render();
+    setStatus('Edits saved and book updated.');
+  }
+};
+
+// Cancel / Discard Edits Handler
+$('cancelEditBtn').onclick = (e) => {
+  e.preventDefault();
+  if (!isEditing) return;
+  isEditing = false;
+  const editBtn = $('editModeBtn');
+  const cancelBtn = $('cancelEditBtn');
+  const bookEl = $('book');
+  const editArea = $('editTextarea');
+  const editToolbar = $('editToolbar');
+
+  text = preEditText;
+  editArea.classList.add('hidden');
+  editToolbar.classList.add('hidden');
+  bookEl.classList.remove('hidden');
+  editBtn.textContent = '✏️ Edit Mode';
+  editBtn.classList.remove('primary');
+  cancelBtn.classList.add('hidden');
+  render();
+  setStatus('Edit cancelled. Changes discarded.');
+};
+
+// Fixed: Only apply preventDefault to toolbar buttons to ensure sliders, checkboxes, and selects work correctly
+document.querySelectorAll('.btn, .toolbar-select').forEach(element => {
+  element.addEventListener('mousedown', (e) => {
+    if (e.target !== $('editTextarea') && e.target !== $('editFindInput')) {
+      e.preventDefault(); 
+    }
+  });
+});
+
+function execCmd(command, value = null) {
+  $('editTextarea').focus();
+  document.execCommand(command, false, value);
+  updateEditStats(true);
+}
+
+$('editUndoBtn').onclick = () => execCmd('undo');
+$('editRedoBtn').onclick = () => execCmd('redo');
+
+$('editPasteBtn').onclick = async () => {
+  try {
+    const clipText = await navigator.clipboard.readText();
+    execCmd('insertText', clipText);
+    setStatus('Pasted from clipboard');
+  } catch(e) {
+    setStatus('Paste failed: Permission denied or unsupported');
+  }
+};
+$('editCutBtn').onclick = () => { execCmd('cut'); setStatus('Cut text'); };
+$('editCopyBtn').onclick = () => { execCmd('copy'); setStatus('Copied text'); };
+$('editFormatPainterBtn').onclick = () => {
+  const sel = window.getSelection();
+  if(!sel.rangeCount || sel.isCollapsed) { setStatus('Select text to copy format'); return; }
+  formatPainterSnippet = sel.getRangeAt(0).cloneContents();
+  setStatus('Format copied! Select target and click Painter again.');
+};
+
+$('editFontFace').onchange = (e) => execCmd('fontName', e.target.value);
+$('editFontSize').onchange = (e) => {
+  const sizeMap = {'12px':'2', '14px':'3', '16px':'4', '20px':'5', '26px':'6', '32px':'7'};
+  execCmd('fontSize', sizeMap[e.target.value] || '4');
+};
+$('editGrowFontBtn').onclick = () => {
+  const sel = window.getSelection();
+  if(!sel.rangeCount) return;
+  const span = document.createElement('span');
+  span.style.fontSize = '1.2em';
+  span.appendChild(sel.getRangeAt(0).extractContents());
+  sel.getRangeAt(0).insertNode(span);
+  updateEditStats(true);
+};
+$('editShrinkFontBtn').onclick = () => {
+  const sel = window.getSelection();
+  if(!sel.rangeCount) return;
+  const span = document.createElement('span');
+  span.style.fontSize = '0.85em';
+  span.appendChild(sel.getRangeAt(0).extractContents());
+  sel.getRangeAt(0).insertNode(span);
+  updateEditStats(true);
+};
+$('editChangeCaseBtn').onclick = () => {
+  const sel = window.getSelection();
+  if(!sel.toString()) return;
+  const textContent = sel.toString();
+  const toggled = textContent === textContent.toUpperCase() ? textContent.toLowerCase() : textContent.toUpperCase();
+  execCmd('insertText', toggled);
+};
+$('editClearFormatBtn').onclick = () => execCmd('removeFormat');
+$('editBoldBtn').onclick = () => execCmd('bold');
+$('editItalicBtn').onclick = () => execCmd('italic');
+$('editUnderlineBtn').onclick = () => execCmd('underline');
+$('editStrikethroughBtn').onclick = () => execCmd('strikeThrough');
+$('editSubscriptBtn').onclick = () => execCmd('subscript');
+$('editSuperscriptBtn').onclick = () => execCmd('superscript');
+$('editHighlightColor').oninput = (e) => execCmd('hiliteColor', e.target.value);
+$('editFontColor').oninput = (e) => execCmd('foreColor', e.target.value);
+
+$('editBulletsBtn').onclick = () => execCmd('insertUnorderedList');
+$('editNumberingBtn').onclick = () => execCmd('insertOrderedList');
+$('editMultilevelBtn').onclick = () => {
+  execCmd('insertUnorderedList');
+  execCmd('indent');
+};
+$('editDecreaseIndentBtn').onclick = () => execCmd('outdent');
+$('editIncreaseIndentBtn').onclick = () => execCmd('indent');
+$('editSortBtn').onclick = () => {
+  const ta = $('editTextarea');
+  const lines = ta.innerText.split('\n').filter(Boolean);
+  lines.sort((a,b)=>a.localeCompare(b));
+  ta.innerHTML = lines.map(l => `<div>${l}</div>`).join('');
+  updateEditStats(true);
+  setStatus('Sorted paragraph lines alphabetically');
+};
+$('editShowHideBtn').onclick = () => {
+  $('editTextarea').classList.toggle('show-marks');
+  setStatus('Toggled formatting marks');
+};
+$('editAlignLeftBtn').onclick = () => execCmd('justifyLeft');
+$('editCenterBtn').onclick = () => execCmd('justifyCenter');
+$('editAlignRightBtn').onclick = () => execCmd('justifyRight');
+$('editJustifyBtn').onclick = () => execCmd('justifyFull');
+$('editSpacingBtn').onclick = () => {
+  const sel = window.getSelection();
+  if(!sel.rangeCount) return;
+  const span = document.createElement('div');
+  span.style.lineHeight = '2.2';
+  span.style.marginBottom = '1.5em';
+  span.appendChild(sel.getRangeAt(0).extractContents());
+  sel.getRangeAt(0).insertNode(span);
+  updateEditStats(true);
+  setStatus('Adjusted line and paragraph spacing');
+};
+$('editShadingBtn').onclick = () => {
+  const color = prompt("Enter shading background color (e.g., #f3f4f6 or rgba(37,99,235,0.1)):", "#f3f4f6");
+  if(color) execCmd('hiliteColor', color);
+};
+$('editBorderBtn').onclick = () => {
+  const sel = window.getSelection();
+  if(!sel.rangeCount) return;
+  const span = document.createElement('div');
+  span.style.borderBottom = '2px solid var(--accent)';
+  span.style.paddingBottom = '4px';
+  span.appendChild(sel.getRangeAt(0).extractContents());
+  sel.getRangeAt(0).insertNode(span);
+  updateEditStats(true);
+  setStatus('Applied custom border');
+};
+
+$('editStylesGallery').onchange = (e) => {
+  const val = e.target.value;
+  if(val === 'p') execCmd('formatBlock', '<p>');
+  else if(val === 'h1') execCmd('formatBlock', '<h1>');
+  else if(val === 'h2') execCmd('formatBlock', '<h2>');
+  else if(val === 'h3') execCmd('formatBlock', '<h3>');
+  else if(val === 'blockquote') execCmd('formatBlock', '<blockquote>');
+};
+$('editMoreStylesBtn').onclick = () => {
+  const styleName = prompt("Enter custom style rule (e.g. font-weight:bold; color:red;):");
+  if(styleName) {
+    const sel = window.getSelection();
+    if(!sel.rangeCount) return;
+    const span = document.createElement('span');
+    span.style.cssText = styleName;
+    span.appendChild(sel.getRangeAt(0).extractContents());
+    sel.getRangeAt(0).insertNode(span);
+    updateEditStats(true);
+  }
+};
+
+$('editFindBtn').onclick = () => {
+  const query = $('editFindInput').value.trim();
+  if(!query) { setStatus('Enter search term'); return; }
+  const ta = $('editTextarea');
+  const content = ta.innerText;
+  const idx = content.toLowerCase().indexOf(query.toLowerCase());
+  if(idx !== -1) {
+    setStatus(`Found "${query}" at position ${idx}`);
+  } else {
+    setStatus(`"${query}" not found`);
+  }
+};
+$('editReplaceBtn').onclick = () => {
+  const query = prompt("Find text:");
+  if(!query) return;
+  const replacement = prompt("Replace with:");
+  if(replacement === null) return;
+  const ta = $('editTextarea');
+  ta.innerHTML = ta.innerHTML.split(query).join(replacement);
+  updateEditStats(true);
+  setStatus(`Replaced instances of "${query}" with "${replacement}"`);
+};
+$('editSelectAllBtn').onclick = () => execCmd('selectAll');
+
+$('editTextarea').oninput = () => updateEditStats(false);
+
+$('muteBtn').onclick=()=>{
+  isMuted=!isMuted;
+  if(isMuted){
+    preMuteVolume=Number($('volume').value);
+    $('volume').value=0;
+    $('muteBtn').textContent='🔇 Unmute';
+  }else{
+    $('volume').value=preMuteVolume>0?preMuteVolume:1;
+    $('muteBtn').textContent='🔊 Mute';
+  }
+  applyVolumeChange();
+};
+
+$('volDownBtn').onclick=()=>{
+  let v=Math.max(0, Number($('volume').value)-0.1);
+  $('volume').value=v.toFixed(2);
+  applyVolumeChange();
+};
+
+$('volUpBtn').onclick=()=>{
+  let v=Math.min(1, Number($('volume').value)+0.1);
+  $('volume').value=v.toFixed(2);
+  applyVolumeChange();
+};
+
+$('volume').oninput=()=>{
+  isMuted=false;
+  $('muteBtn').textContent='🔊 Mute';
+  applyVolumeChange();
+};
+
+$('testHindi').onclick=()=>{
+  if(!speechSupported){setStatus('Speech synthesis is not supported in this browser');return}
+  speechSynthesis.cancel();
+  const v=getSelectedVoice();
+  const u=new SpeechSynthesisUtterance('नमस्ते। यह हिंदी आवाज़ का परीक्षण है।');
+  u.lang=v?.lang||'hi-IN';
+  if(v)u.voice=v;
+  u.rate=.9;
+  u.volume=isMuted?0:Number($('volume').value);
+  u.onstart=()=>setStatus('Testing voice');
+  u.onend=()=>setStatus(v?`Voice: ${v.name}`:'Voice unavailable');
+  u.onerror=e=>setStatus('Voice error: '+e.error);
+  speechSynthesis.speak(u)
+};
+
+$('drop').onclick=()=>$('file').click();
+$('file').onchange=e=>{
+  if(e.target.files[0]){
+    loadFile(e.target.files[0]);
+  }
+};
+
+['dragenter','dragover'].forEach(ev=>$('drop').addEventListener(ev,e=>{e.preventDefault();$('drop').classList.add('drag')}));
+['dragleave','drop'].forEach(ev=>$('drop').addEventListener(ev,e=>{e.preventDefault();$('drop').classList.remove('drag')}));
+$('drop').addEventListener('drop',e=>{
+  e.preventDefault();
+  if(e.dataTransfer.files[0]){
+    loadFile(e.dataTransfer.files[0]);
+  }
+});
+
+$('loadPaste').onclick=()=>loadText($('paste').value,'Pasted text');
+$('playBtn').onclick=play;
+$('pauseBtn').onclick=pause;
+$('stopBtn').onclick=stopReading;
+$('backBtn').onclick=restart;
+
+$('prevBtn').onclick=()=>{
+  const target = Math.max(0, currentParagraphIndex - 1);
+  currentParagraphIndex = target;
+  scrollToParagraph(target);
+  if(playing) playFromParagraph(target);
+};
+$('nextBtn').onclick=()=>{
+  const target = Math.min(paragraphs.length - 1, currentParagraphIndex + 1);
+  currentParagraphIndex = target;
+  scrollToParagraph(target);
+  if(playing) playFromParagraph(target);
+};
+
+$('fsPrevBtn').onclick = () => $('prevBtn').click();
+$('fsPlayBtn').onclick = () => { playing ? pause() : play(); };
+$('fsNextBtn').onclick = () => $('nextBtn').click();
+$('fsRestartBtn').onclick = () => restart();
+
+$('playFromViewBtn').onclick=()=>{
+  const idx=getCurrentVisibleParagraphIndex();
+  currentParagraphIndex = idx;
+  scrollToParagraph(idx);
+  playFromParagraph(idx);
+};
+$('themeBtn').onclick=()=>{document.body.classList.toggle('dark');$('themeBtn').textContent=document.body.classList.contains('dark')?'☀️ Light':'🌙 Dark'};
+
+// Double-click on any word to start reading from that cursor point
+$('book').addEventListener('dblclick', (e) => {
+  const wordSpan = e.target.closest('.word');
+  if (wordSpan && !isEditing) {
+    const wordIndex = parseInt(wordSpan.dataset.wordIndex, 10);
+    if (!isNaN(wordIndex)) {
+      const paraIdx = getParagraphIndexForWordIndex(wordIndex);
+      currentParagraphIndex = paraIdx;
+      scrollToParagraph(paraIdx);
+      playFromParagraph(paraIdx);
+      setStatus(`Playing from word at section ${paraIdx + 1}`);
+    }
+  }
+});
+
+// Full-Text Translation Feature
+async function translateFullText(targetLang) {
+  if (!text) { setStatus('Load text first'); return; }
+  setStatus('Translating entire text via Google Translate API...');
+  try {
+    const paras = text.split(/\n\s*\n/).filter(Boolean);
+    const translatedParas = [];
+    for (let p of paras) {
+      const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(p)}`);
+      const data = await res.json();
+      if (data && data[0]) {
+        const translatedChunk = data[0].map(item => item[0]).join('');
+        translatedParas.push(translatedChunk);
+      } else {
+        translatedParas.push(p);
+      }
+    }
+    text = translatedParas.join('\n\n');
+    render();
+    if(targetLang === 'en') $('lang').value = 'en-IN';
+    else if(targetLang === 'hi') $('lang').value = 'hi-IN';
+    setStatus('Full text translation complete & ready for speech');
+  } catch(e) {
+    console.error(e);
+    setStatus('Translation failed');
+  }
+}
+
+$('translateEnBtn').onclick = () => translateFullText('en');
+$('translateHiBtn').onclick = () => translateFullText('hi');
+$('restoreOriginalBtn').onclick = () => {
+  if (!originalText) return;
+  text = originalText;
+  render();
+  setStatus('Restored original text');
+};
+
+// Convert to One Line Feature
+$('oneLineBtn').onclick = () => {
+  if (!text) { setStatus('Load text first'); return; }
+  text = text.replace(/[\r\n]+/g, ' ').replace(/\s+/g, ' ').trim();
+  render();
+  setStatus('Converted entire text into one single line');
+};
+
+async function toggleFullscreen(){
+  try{
+    if(!document.fullscreenElement){
+      await document.documentElement.requestFullscreen();
+    }else{
+      await document.exitFullscreen();
+    }
+  }catch(e){
+    setStatus('Full-screen mode unavailable');
+  }
+}
+
+function updateFullscreenUI(){
+  const active=!!document.fullscreenElement;
+  document.body.classList.toggle('fullscreen', active);
+  if(active){
+    $('fsBtn').textContent='✕ Exit full screen';
+    $('fsBtn').title='Exit full screen';
+  }else{
+    $('fsBtn').textContent='⛶ Full screen';
+    $('fsBtn').title='Enter full screen';
+  }
+}
+
+$('fsBtn').onclick=toggleFullscreen;
+document.addEventListener('fullscreenchange',updateFullscreenUI);
+$('font').oninput=e=>{fontSize=+e.target.value;$('fontVal').textContent=fontSize+'px';$('book').style.fontSize=fontSize+'px';$('editTextarea').style.fontSize=fontSize+'px'};
+$('fontUp').onclick=()=>{$('font').value=Math.min(52,+$('font').value+2);$('font').dispatchEvent(new Event('input'))};
+$('fontDown').onclick=()=>{$('font').value=Math.max(16,+$('font').value-2);$('font').dispatchEvent(new Event('input'))};
+$('speed').oninput=e=>$('speedVal').textContent=Number(e.target.value).toFixed(1)+'×';
+$('reader').onscroll=updateProgress;
+$('focusWord').onchange=e=>{focusWordEnabled=e.target.checked;if(!focusWordEnabled)clearFocus()};
+$('focusParagraph').onchange=e=>{focusParagraphEnabled=e.target.checked;if(!focusParagraphEnabled)document.querySelectorAll('#book .reading-paragraph').forEach(x=>x.classList.remove('reading-paragraph'))};
+$('lang').onchange=()=>{
+  const l=$('lang').value==='auto'?detectLang(text):$('lang').value;
+  $('langBadge').textContent=l;
+  refreshVoices();
+  if(l==='hi-IN') setStatus('Hindi reading selected');
+};
+
+const tooltip = $('wordTooltip');
+const translationCache = {};
+
+async function translateWordText(cleanW) {
+  const engine = $('translatorEngine').value;
+  const cacheKey = `${engine}:${cleanW}`;
+  if (translationCache[cacheKey]) return translationCache[cacheKey];
+
+  try {
+    if (engine === 'google') {
+      const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=hi&dt=t&q=${encodeURIComponent(cleanW)}`);
+      const data = await res.json();
+      if (data && data[0] && data[0][0] && data[0][0][0]) {
+        const translation = data[0][0][0];
+        translationCache[cacheKey] = translation;
+        return translation;
+      }
+    } else {
+      const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(cleanW)}&langpair=en|hi`);
+      const data = await res.json();
+      const translation = data.responseData?.translatedText || cleanW;
+      translationCache[cacheKey] = translation;
+      return translation;
+    }
+  } catch (err) {
+    console.error('Translation error:', err);
+  }
+  return cleanW;
+}
+
+$('enableTranslation').onchange = (e) => {
+  if (!e.target.checked) {
+    tooltip.style.display = 'none';
+  }
+};
+
+$('book').addEventListener('mouseover', async (e) => {
+  if (!$('enableTranslation').checked) return;
+  if (e.target.classList.contains('word') && !isEditing) {
+    const rawWord = e.target.textContent;
+    const cleanW = rawWord.replace(/[^\p{L}\p{N}]/gu, '');
+    if (!cleanW) return;
+
+    const rect = e.target.getBoundingClientRect();
+    tooltip.style.left = `${rect.left + rect.width / 2}px`;
+    tooltip.style.top = `${rect.top}px`;
+    tooltip.textContent = `⏳ Translating...`;
+    tooltip.style.display = 'block';
+
+    const translation = await translateWordText(cleanW);
+    if ($('enableTranslation').checked) {
+      tooltip.textContent = translation;
+    }
+  }
+});
+
+$('book').addEventListener('mouseout', (e) => {
+  if (e.target.classList.contains('word')) {
+    tooltip.style.display = 'none';
+  }
+});
+
+document.addEventListener('keydown',e=>{if(e.code==='Space'&&document.activeElement.getAttribute('contenteditable')!=='true'&&document.activeElement.tagName!=='INPUT'){e.preventDefault();playing?pause():play()}if(e.key==='Escape'&&document.fullscreenElement)document.exitFullscreen()});
+if(speechSupported){speechSynthesis.onvoiceschanged=refreshVoices;setTimeout(refreshVoices,300)}
+</script>
+</body>
+</html>
