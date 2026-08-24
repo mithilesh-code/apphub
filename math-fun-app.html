@@ -162,7 +162,8 @@
 
                 <div class="flex gap-2 items-center">
                     <label class="text-xs font-bold text-gray-600">Speed:</label>
-                    <input type="range" id="game-speed" min="1" max="5" value="2" class="cursor-pointer w-20">
+                    <input type="range" id="game-speed" min="0.25" max="3" step="0.25" value="1" oninput="updateGameSpeed(this.value)" class="cursor-pointer w-20">
+                    <span id="game-speed-display" class="text-xs font-bold text-indigo-700 w-8">1x</span>
                     <button onclick="toggleGamePause()" id="btn-pause" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded-lg text-xs font-bold shadow">
                         <i class="fa-solid fa-pause"></i> Pause
                     </button>
@@ -236,7 +237,7 @@
 
             </div>
 
-            <!-- Game Input Footer (Fallback / Unused for Flash now that MCQs are active) -->
+            <!-- Game Input Footer -->
             <div id="game-input-area" class="w-full mt-4 flex gap-3 hidden">
                 <input type="number" id="game-answer-input" placeholder="Type answer..." class="flex-grow px-4 py-3 border-2 border-indigo-200 rounded-xl text-xl font-bold text-center focus:ring-4 focus:ring-indigo-400 outline-none">
                 <button onclick="submitGameAnswer()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow">Submit</button>
@@ -248,7 +249,7 @@
             <div class="flex justify-between items-center mb-6 border-b pb-4">
                 <div>
                     <h3 class="text-2xl font-extrabold text-indigo-900">Quiz Challenge</h3>
-                    <p class="text-xs text-gray-500" id="quiz-mode-subtitle">Standard & Advanced Missing Factor Challenge (Max Multiplier 10)</p>
+                    <p class="text-xs text-gray-500" id="quiz-mode-subtitle">Standard & Advanced Missing Factor Challenge within Selected Range</p>
                 </div>
                 <div class="text-right">
                     <span class="bg-purple-100 text-purple-800 font-bold px-3 py-1 rounded-full text-xs">Question <span id="quiz-q-num">1</span>/10</span>
@@ -285,11 +286,6 @@
 
     </main>
 
-    <!-- Footer -->
-    <footer class="text-center py-4 text-white/80 text-xs mt-6">
-        Math Wizard App • Built for Young Learners with English Audio, Animals, Vehicles & Sound Effects ✨
-    </footer>
-
     <!-- JavaScript Application Logic -->
     <script>
         // --- Web Audio API Sound Effects Generator ---
@@ -309,9 +305,9 @@
 
             if (type === 'success') {
                 osc.type = 'triangle';
-                osc.frequency.setValueAtTime(523.25, now); // C5
-                osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
-                osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.setValueAtTime(659.25, now + 0.1);
+                osc.frequency.setValueAtTime(783.99, now + 0.2);
                 gainNode.gain.setValueAtTime(0.2, now);
                 gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
                 osc.start(now);
@@ -353,8 +349,9 @@
         let currentMode = 'normal';
         let currentGameVariant = 'balloon';
         let availableVoices = [];
+        let currentGameSpeed = 1;
 
-        // --- Strictly 3 English Audio Modes (No Hindi) ---
+        // --- Strictly 3 English Audio Modes ---
         function populateVoices() {
             if (!('speechSynthesis' in window)) return;
             availableVoices = window.speechSynthesis.getVoices();
@@ -410,7 +407,6 @@
                 window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
                 
-                // Get speed from normal autoplay settings or default to 1.0
                 const speedSelect = document.getElementById('autoplay-speed-select');
                 const currentSpeed = speedSelect ? parseFloat(speedSelect.value) : 1.0;
                 utterance.rate = isLoudAppreciation ? Math.min(3.0, currentSpeed * 1.1) : currentSpeed;
@@ -636,7 +632,6 @@
 
             const utterance = new SpeechSynthesisUtterance(lineText);
             
-            // Apply speed setting from 0.25x to 3x
             const speedSelect = document.getElementById('autoplay-speed-select');
             utterance.rate = speedSelect ? parseFloat(speedSelect.value) : 1.0;
 
@@ -667,13 +662,35 @@
             window.speechSynthesis.speak(utterance);
         }
 
-        // --- GAME MODE & VARIANTS (Featuring Animals & Vehicles) ---
+        // --- GAME MODE & VARIANTS ---
         let gameScoreVal = 0;
         let gameLivesVal = 3;
         let currentGameFactor1 = 2;
         let currentGameFactor2 = 2;
         let isPaused = false;
         let flashTimerInterval = null;
+        let flashStartTime = 0;
+        let flashMaxTimeMs = 5000;
+        let flashElapsedTime = 0;
+
+        function updateGameSpeed(val) {
+            currentGameSpeed = parseFloat(val);
+            const display = document.getElementById('game-speed-display');
+            if (display) {
+                display.innerText = `${currentGameSpeed}x`;
+            }
+            applySpeedToActiveGame();
+        }
+
+        function applySpeedToActiveGame() {
+            if (currentGameVariant === 'balloon') {
+                const balloons = document.querySelectorAll('#balloon-grid button');
+                balloons.forEach(balloon => {
+                    const animation = balloon.getAnimations().find(item => item.animationName === 'float-up');
+                    if (animation) animation.playbackRate = currentGameSpeed;
+                });
+            }
+        }
 
         function setGameVariant(variant) {
             currentGameVariant = variant;
@@ -729,8 +746,9 @@
                 return;
             }
 
+            // Both factors adhere strictly to the selected table range (e.g. 1 to 5)
             currentGameFactor1 = Math.floor(Math.random() * (endNum - startNum + 1)) + startNum;
-            currentGameFactor2 = Math.floor(Math.random() * 10) + 1; // Max factor 10
+            currentGameFactor2 = Math.floor(Math.random() * (endNum - startNum + 1)) + startNum;
 
             if (currentGameVariant === 'balloon') {
                 document.getElementById('game-balloon-content').classList.remove('hidden');
@@ -756,9 +774,11 @@
                     let animalTag = safariAnimals[Math.floor(Math.random() * safariAnimals.length)];
                     btn.className = "bg-gradient-to-br from-pink-400 to-purple-500 hover:from-pink-500 hover:to-purple-600 text-white font-black text-xl py-4 rounded-full shadow-lg border-2 border-white animate-float transition-all transform hover:scale-105 flex flex-col items-center justify-center";
                     btn.innerHTML = `<span>${animalTag}</span><span>${opt}</span>`;
+                    btn.style.animationDuration = '3s';
                     btn.onclick = (e) => popBalloon(btn, opt, correctAns);
                     grid.appendChild(btn);
                 });
+                applySpeedToActiveGame();
 
             } else if (currentGameVariant === 'dragdrop') {
                 document.getElementById('game-dragdrop-content').classList.remove('hidden');
@@ -823,17 +843,22 @@
                 });
 
                 if (flashTimerInterval) clearInterval(flashTimerInterval);
-                let speedVal = parseInt(document.getElementById('game-speed').value);
-                let maxTimeMs = Math.max(2500, 8000 - speedVal * 1000);
-                let startTime = Date.now();
+                
+                flashMaxTimeMs = 6000;
+                flashStartTime = Date.now();
+                flashElapsedTime = 0;
                 
                 flashTimerInterval = setInterval(() => {
                     if(isPaused) return;
-                    let elapsed = Date.now() - startTime;
-                    let pct = Math.max(0, 100 - (elapsed / maxTimeMs) * 100);
+                    let now = Date.now();
+                    let dt = (now - flashStartTime);
+                    flashStartTime = now;
+                    flashElapsedTime += dt * currentGameSpeed;
+
+                    let pct = Math.max(0, 100 - (flashElapsedTime / flashMaxTimeMs) * 100);
                     document.getElementById('flash-timer-bar').style.width = `${pct}%`;
                     
-                    if(elapsed >= maxTimeMs) {
+                    if(flashElapsedTime >= flashMaxTimeMs) {
                         clearInterval(flashTimerInterval);
                         gameLivesVal--;
                         updateGameStats();
@@ -849,7 +874,7 @@
             }
         }
 
-        // Balloon Pop Logic with Sound Effects & Burst Animation
+        // Balloon Pop Logic
         function popBalloon(element, selected, correct) {
             if (selected === correct) {
                 element.classList.add('animate-pop');
@@ -873,7 +898,6 @@
             updateGameStats();
         }
 
-        // Drag and Drop Handlers
         function allowDrop(ev) {
             ev.preventDefault();
         }
@@ -900,7 +924,6 @@
             updateGameStats();
         }
 
-        // Zoo and Track Multiple Choice Choice Handler
         function submitFlashChoice(selected, correct) {
             if (flashTimerInterval) clearInterval(flashTimerInterval);
             if (selected === correct) {
@@ -966,7 +989,7 @@
             speakText(`Game over. You scored ${gameScoreVal} points.`);
         }
 
-        // --- QUIZ MODE (Max Multiplier 10) ---
+        // --- QUIZ MODE ---
         let quizQuestions = [];
         let currentQuizIndex = 0;
         let quizScore = 0;
@@ -982,13 +1005,13 @@
             for (let i = 0; i < 10; i++) {
                 const type = i >= 5 ? 'advanced' : 'standard';
                 let f1 = Math.floor(Math.random() * (endNum - startNum + 1)) + startNum;
-                let f2 = Math.floor(Math.random() * 10) + 1; // Strict rule: multiply by max 10
+                let f2 = Math.floor(Math.random() * (endNum - startNum + 1)) + startNum;
                 
                 if (type === 'standard') {
                     quizQuestions.push({
                         qText: `${f1} × ${f2} = ?`,
                         ans: f1 * f2,
-                        hint: "Standard multiplication (up to 10)"
+                        hint: "Standard multiplication within selected range"
                     });
                 } else {
                     const missingFirst = Math.random() > 0.5;

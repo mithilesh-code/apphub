@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Vocabulary Universe & Planet System</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --panel-bg: #1e293b;
+            --text-color: #f8fafc;
+            --accent-color: #38bdf8;
+            --accent-hover: #0ea5e9;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            transition: background-color 0.5s ease;
+        }
+
+        header {
+            width: 100%;
+            padding: 12px 20px;
+            background: rgba(30, 41, 59, 0.85);
+            backdrop-filter: blur(10px);
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            background: linear-gradient(to right, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .controls {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        button, .file-upload-btn, select {
+            background-color: var(--panel-bg);
+            color: var(--text-color);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            text-decoration: none;
+        }
+
+        select {
+            padding: 5px 10px;
+            outline: none;
+        }
+
+        button.active, a.home-btn:hover {
+            background-color: var(--accent-color);
+            color: #0f172a;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+        }
+
+        button:hover:not(.active), .file-upload-btn:hover, select:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: var(--accent-color);
+        }
+
+        .file-upload-btn input {
+            display: none;
+        }
+
+        .speed-control, .zoom-control {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            background: rgba(15, 23, 42, 0.5);
+            padding: 3px 8px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .speed-control input[type="range"] {
+            width: 70px;
+            accent-color: var(--accent-color);
+            cursor: pointer;
+        }
+
+        #canvas-container {
+            flex-grow: 1;
+            width: 100%;
+            position: relative;
+            cursor: grab;
+        }
+
+        #canvas-container:active {
+            cursor: grabbing;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .tooltip {
+            position: absolute;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid var(--accent-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            pointer-events: none;
+            display: none;
+            font-size: 13px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            z-index: 100;
+        }
+
+        /* Definition Modal */
+        #def-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(8px);
+            border: 2px solid var(--accent-color);
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        #def-modal.show {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        #def-word {
+            font-size: 26px;
+            margin-bottom: 12px;
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        #def-text {
+            font-size: 15px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        #close-modal {
+            background: var(--accent-color);
+            color: #0f172a;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Sidebar Editor Panel */
+        #editor-panel {
+            position: fixed;
+            top: 0;
+            right: -420px;
+            width: 400px;
+            height: 100%;
+            background: #1e293b;
+            box-shadow: -5px 0 30px rgba(0,0,0,0.7);
+            z-index: 300;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid rgba(255,255,255,0.1);
+        }
+
+        #editor-panel.open {
+            right: 0;
+        }
+
+        .editor-header {
+            padding: 15px 20px;
+            background: #0f172a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .editor-header h3 { margin: 0; font-size: 18px; color: var(--accent-color); }
+        
+        .close-editor {
+            background: none; border: none; color: #fff; font-size: 20px; cursor: pointer;
+        }
+
+        .editor-content {
+            padding: 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .word-list-container {
+            max-height: 160px;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 10px;
+            background: rgba(15,23,42,0.4);
+        }
+
+        .word-item-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 13px;
+        }
+
+        .word-item-row button {
+            background: #ef4444;
+            border: none;
+            padding: 3px 8px;
+            font-size: 11px;
+            border-radius: 4px;
+        }
+
+        .add-word-form, .core-editor-box, .export-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: rgba(15,23,42,0.4);
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .core-editor-box input[type="text"], .add-word-form input {
+            background: #0f172a;
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 8px;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 13px;
+        }
+
+        .slider-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .slider-row input {
+            width: 150px;
+            accent-color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Interactive Vocabulary Universe</h1>
+        <div class="controls">
+            <!-- Home Button -->
+            <a href="index.html" class="file-upload-btn" title="Go to Home / index.html">🏠 Home</a>
+
+            <button id="style-planets" class="active">🪐 Planet System</button>
+            <button id="style-sphere">3D Sphere</button>
+            <button id="style-ring">Rotating Ring</button>
+            <button id="style-bubbles">Floating Bubbles</button>
+            <button id="style-vortex">Swirling Vortex</button>
+            
+            <!-- Universe Background / Flying Objects Selector -->
+            <select id="universeBgSelect" title="Choose Universe Background & Flying Objects">
+                <option value="none">🌌 Universe BG: Classic Space</option>
+                <option value="stars">⭐ Starfield (Flying Stars)</option>
+                <option value="meteorites">☄️ Meteorite Shower</option>
+                <option value="galaxies">🌀 Galaxy Cluster</option>
+            </select>
+
+            <!-- Kids Theme Selector -->
+            <select id="themeSelect">
+                <option value="cosmic">✨ Theme: Cosmic Space</option>
+                <option value="forest">🌲 Theme: Magical Forest</option>
+                <option value="ocean">🌊 Theme: Deep Sea Ocean</option>
+            </select>
+
+            <!-- Zoom Controls -->
+            <div class="zoom-control">
+                <span>Zoom:</span>
+                <button id="zoomIn" title="Shortcut: +">+</button>
+                <button id="zoomOut" title="Shortcut: -">-</button>
+            </div>
+            
+            <button id="fullscreenBtn" title="Toggle Fullscreen">⛶ Fullscreen</button>
+            
+            <label class="file-upload-btn" title="Upload CSV format: Word, Definition">
+                📁 Upload CSV
+                <input type="file" id="csvUpload" accept=".csv,.txt">
+            </label>
+            
+            <button id="toggle-editor">✏️ Settings</button>
+
+            <div class="speed-control">
+                <span>Speed:</span>
+                <input type="range" id="speedRange" min="0.2" max="3" step="0.1" value="1">
+            </div>
+        </div>
+    </header>
+
+    <div id="canvas-container">
+        <canvas id="vocabCanvas"></canvas>
+        <div id="tooltip" class="tooltip">Click to learn!</div>
+    </div>
+
+    <!-- Definition Modal -->
+    <div id="def-modal">
+        <div id="def-word">Word</div>
+        <div id="def-text">Definition goes here...</div>
+        <button id="close-modal">Awesome, got it!</button>
+    </div>
+
+    <!-- Sidebar Editor Panel -->
+    <div id="editor-panel">
+        <div class="editor-header">
+            <h3>Universe Settings</h3>
+            <button class="close-editor" id="close-editor">×</button>
+        </div>
+        <div class="editor-content">
+            <!-- Edit Sun / Core Center -->
+            <div class="core-editor-box">
+                <strong>🌟 Edit Center Core</strong>
+                <input type="text" id="coreTitleInput" value="🌟 Core" placeholder="Center Title">
+                <input type="text" id="coreDescInput" value="Avian Ecology Hub" placeholder="Center Description">
+                
+                <div style="margin-top: 6px;">
+                    <label style="font-size: 12px; color: #94a3b8; display: block; margin-bottom: 4px;">Upload Custom Core Image:</label>
+                    <input type="file" id="coreImageUpload" accept="image/*" style="font-size:12px; color:#fff;">
+                </div>
+
+                <div class="slider-row" style="margin-top: 6px;">
+                    <span>Core Radius/Size:</span>
+                    <input type="range" id="coreSizeRange" min="20" max="150" value="45">
+                </div>
+
+                <div style="display: flex; gap: 6px; margin-top: 4px;">
+                    <button id="updateCoreBtn" style="flex: 1; background: var(--accent-color); color: #0f172a; border: none; padding: 6px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px;">Update Center</button>
+                    <button id="removeCoreImgBtn" style="background: #ef4444; color: #fff; border: none; padding: 6px 10px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px;">Remove Image</button>
+                </div>
+            </div>
+
+            <!-- Export to Excel/CSV -->
+            <div class="export-box">
+                <strong>📊 Export Vocabulary</strong>
+                <button id="exportCsvBtn" style="background: var(--accent-color); color: #0f172a; border: none; padding: 6px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 12px;">Download as Excel/CSV</button>
+            </div>
+
+            <p style="font-size: 12px; color: #94a3b8; margin: 0;">Manage vocabulary or upload a CSV file (`Word, Definition`).</p>
+            
+            <div class="word-list-container" id="wordListContainer">
+                <!-- Dynamically filled -->
+            </div>
+
+            <div class="add-word-form">
+                <strong>Add New Word</strong>
+                <input type="text" id="newWordInput" placeholder="Vocabulary Word">
+                <input type="text" id="newDefInput" placeholder="Definition">
+                <button id="addWordBtn" style="background: var(--accent-color); color: #0f172a; border: none; padding: 8px; border-radius: 6px; font-weight: bold; cursor: pointer;">Add Word</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let coreConfig = { 
+            title: "🌟 Core", 
+            desc: "Avian Ecology Hub", 
+            customImage: null,
+            radius: 45
+        };
+
+        let vocabData = [
+            { word: "Responsibility", def: "A duty or task to care for the environment and its wildlife." },
+            { word: "Uninvited", def: "Species or guests arriving without being intentionally attracted." },
+            { word: "Bird feeder", def: "An outdoor device placed to supply food to wild birds." },
+            { word: "Bird bath", def: "A shallow basin filled with water for birds to drink and bathe in." },
+            { word: "Spices", def: "Seeds or bark used to flavor food, sometimes found in natural bird diets." },
+            { word: "Beverages", def: "Liquids for drinking, like nectar that hummingbirds consume." },
+            { word: "Edible", def: "Items that are safe and fit for birds or humans to eat." },
+            { word: "Swelling", def: "Enlargement of seeds as they absorb water before germinating." },
+            { word: "Digestion", def: "The process by which birds break down seeds and insects in their crop and gizzard." },
+            { word: "Ploughing", def: "Turning over earth, similar to how foraging birds aerate the soil." },
+            { word: "Companions", def: "Flock mates or other species that coexist in an ecosystem." },
+            { word: "Seed dispersal", def: "The vital ecological role birds play by spreading seeds through their droppings." },
+            { word: "Fertile", def: "Soil enriched by organic matter (like bird guano) to support plant growth." },
+            { word: "Spreading", def: "The act of scattering seeds across a wide area to grow new plants." },
+            { word: "Defecate", def: "The process of eliminating waste, which drops seeds in new locations." }
+        ];
+
+        const themes = {
+            cosmic: { bg: '#0f172a', panel: '#1e293b', accent: '#38bdf8', text: '#f8fafc' },
+            forest: { bg: '#064e3b', panel: '#065f46', accent: '#34d399', text: '#ecfdf5' },
+            ocean:  { bg: '#0c4a6e', panel: '#0369a1', accent: '#38bdf8', text: '#f0f9ff' }
+        };
+
+        const canvas = document.getElementById('vocabCanvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('canvas-container');
+        const tooltip = document.getElementById('tooltip');
+        
+        const modal = document.getElementById('def-modal');
+        const defWord = document.getElementById('def-word');
+        const defText = document.getElementById('def-text');
+        const closeModalBtn = document.getElementById('close-modal');
+
+        const editorPanel = document.getElementById('editor-panel');
+        const toggleEditorBtn = document.getElementById('toggle-editor');
+        const closeEditorBtn = document.getElementById('close-editor');
+        const wordListContainer = document.getElementById('wordListContainer');
+        const newWordInput = document.getElementById('newWordInput');
+        const newDefInput = document.getElementById('newDefInput');
+        const addWordBtn = document.getElementById('addWordBtn');
+        const speedRange = document.getElementById('speedRange');
+        const csvUpload = document.getElementById('csvUpload');
+        const themeSelect = document.getElementById('themeSelect');
+        const universeBgSelect = document.getElementById('universeBgSelect');
+        const zoomInBtn = document.getElementById('zoomIn');
+        const zoomOutBtn = document.getElementById('zoomOut');
+        const fullscreenBtn = document.getElementById('fullscreenBtn');
+        const exportCsvBtn = document.getElementById('exportCsvBtn');
+        const coreTitleInput = document.getElementById('coreTitleInput');
+        const coreDescInput = document.getElementById('coreDescInput');
+        const coreImageUpload = document.getElementById('coreImageUpload');
+        const coreSizeRange = document.getElementById('coreSizeRange');
+        const updateCoreBtn = document.getElementById('updateCoreBtn');
+        const removeCoreImgBtn = document.getElementById('removeCoreImgBtn');
+
+        let width, height;
+        let elements = [];
+        let particles = [];
+        let backgroundStars = [];
+        let currentStyle = 'planets'; 
+        let currentUniverseBg = 'none';
+        let mouse = { x: 0, y: 0, active: false, currentX: 0, currentY: 0 };
+        let rotationX = 0.005;
+        let rotationY = 0.005;
+        let animationSpeed = 1.0;
+        let globalAngle = 0;
+        let zoomLevel = 1.0;
+        let lastSpokenWord = '';
+        let loadedCoreImg = null;
+
+        function resize() {
+            width = container.clientWidth;
+            height = container.clientHeight;
+            canvas.width = width * window.devicePixelRatio;
+            canvas.height = height * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            initBackgroundStars();
+            initElements();
+        }
+
+        function initBackgroundStars() {
+            backgroundStars = [];
+            for (let i = 0; i < 120; i++) {
+                backgroundStars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    size: Math.random() * 2 + 0.5,
+                    alpha: Math.random() * 0.7 + 0.3,
+                    twinkleSpeed: Math.random() * 0.03 + 0.01
+                });
+            }
+        }
+
+        function getRandomColor(index) {
+            const hues = [15, 45, 120, 190, 240, 290, 340];
+            return `hsla(${hues[index % hues.length]}, 85%, 65%, 1)`;
+        }
+
+        function pronounceWord(text) {
+            if ('speechSynthesis' in window && text !== lastSpokenWord) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.9;
+                window.speechSynthesis.speak(utterance);
+                lastSpokenWord = text;
+            }
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 5 + 2;
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.life = 1.0;
+                this.decay = Math.random() * 0.02 + 0.02;
+                this.size = Math.random() * 4 + 2;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.life -= this.decay;
+            }
+            draw() {
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        class VocabWord {
+            constructor(data, index) {
+                this.text = data.word;
+                this.def = data.def;
+                this.index = index;
+                this.color = getRandomColor(index);
+                this.resetCoordinates();
+            }
+
+            resetCoordinates() {
+                const total = vocabData.length;
+                const phi = Math.acos(-1 + (2 * this.index) / total);
+                const theta = Math.sqrt(total * Math.PI) * phi;
+                
+                this.x3d = Math.sin(phi) * Math.cos(theta);
+                this.y3d = Math.sin(phi) * Math.sin(theta);
+                this.z3d = Math.cos(phi);
+
+                this.bx = Math.random() * (width - 150) + 75;
+                this.by = Math.random() * (height - 100) + 50;
+                this.vx = (Math.random() - 0.5) * 2;
+                this.vy = (Math.random() - 0.5) * 2;
+                
+                this.orbitRadius = 120 + (this.index * 32);
+                this.orbitSpeed = (0.012 / Math.sqrt(this.index + 1)) + 0.002;
+                this.planetAngle = (Math.PI * 2 / total) * this.index;
+
+                this.vAngle = (Math.PI * 2 / total) * this.index;
+                this.vRadius = 70 + (this.index * 16);
+
+                // For flying background objects (meteorite / starflight)
+                this.flightX = Math.random() * width;
+                this.flightY = Math.random() * height;
+                this.flightSpeedX = (Math.random() * 2 + 1) * (Math.random() < 0.5 ? 1 : -1);
+                this.flightSpeedY = (Math.random() * 1.5 - 0.75);
+
+                this.x = 0;
+                this.y = 0;
+                this.scale = 1;
+                this.alpha = 1;
+                this.fontSize = 16;
+            }
+
+            update(speed) {
+                if (currentUniverseBg === 'stars') {
+                    // Flying on a Star background mode
+                    this.flightX += this.flightSpeedX * speed;
+                    this.flightY += this.flightSpeedY * speed;
+
+                    if (this.flightX < -50) this.flightX = width + 50;
+                    if (this.flightX > width + 50) this.flightX = -50;
+                    if (this.flightY < 30) this.flightY = height - 30;
+                    if (this.flightY > height - 30) this.flightY = 30;
+
+                    this.x = this.flightX;
+                    this.y = this.flightY;
+                    this.scale = 1.1 * zoomLevel;
+                    this.alpha = 0.95;
+                }
+                else if (currentUniverseBg === 'meteorites') {
+                    // Flying on a Meteorite streaking mode
+                    this.flightX += (this.flightSpeedX * 3.5) * speed;
+                    this.flightY += (this.flightSpeedY * 3.5 + 1.2) * speed;
+
+                    if (this.flightX > width + 100 || this.flightY > height + 100) {
+                        this.flightX = Math.random() * width;
+                        this.flightY = -50;
+                    }
+
+                    this.x = this.flightX;
+                    this.y = this.flightY;
+                    this.scale = 1.05 * zoomLevel;
+                    this.alpha = 1.0;
+                }
+                else if (currentUniverseBg === 'galaxies') {
+                    // Flying on a spinning Galaxy arm node
+                    this.vAngle += 0.015 * speed;
+                    let galaxyCenterX = width / 2;
+                    let galaxyCenterY = height / 2;
+                    let armRadius = (80 + (this.index * 22)) * zoomLevel;
+
+                    this.x = galaxyCenterX + Math.cos(this.vAngle + (this.index * 0.5)) * armRadius;
+                    this.y = galaxyCenterY + Math.sin(this.vAngle + (this.index * 0.5)) * (armRadius * 0.5);
+                    this.scale = 1.15 * zoomLevel;
+                    this.alpha = 0.9;
+                }
+                else {
+                    // Standard Layout Modes (Planets, Sphere, Ring, Bubbles, Vortex)
+                    if (currentStyle === 'sphere') {
+                        let rotY = rotationY * speed;
+                        let rotX = rotationX * speed;
+                        let x1 = this.x3d * Math.cos(rotY) - this.z3d * Math.sin(rotY);
+                        let z1 = this.z3d * Math.cos(rotY) + this.x3d * Math.sin(rotY);
+                        let y1 = this.y3d * Math.cos(rotX) - z1 * Math.sin(rotX);
+                        let z2 = z1 * Math.cos(rotX) + this.y3d * Math.sin(rotX);
+
+                        this.x3d = x1;
+                        this.y3d = y1;
+                        this.z3d = z2;
+
+                        const radius = Math.min(width, height) * 0.3 * zoomLevel;
+                        const depth = 2; 
+                        this.scale = (depth / (depth - this.z3d)) * zoomLevel;
+                        this.x = width / 2 + this.x3d * radius * (this.scale / zoomLevel);
+                        this.y = height / 2 + this.y3d * radius * (this.scale / zoomLevel);
+                        this.alpha = (this.z3d + 1) / 2 * 0.7 + 0.3;
+                    } 
+                    else if (currentStyle === 'ring') {
+                        let ringStep = 0.008 * speed;
+                        let x1 = this.x3d * Math.cos(ringStep) - this.z3d * Math.sin(ringStep);
+                        let z1 = this.z3d * Math.cos(ringStep) + this.x3d * Math.sin(ringStep);
+                        this.x3d = x1;
+                        this.z3d = z1;
+
+                        const radius = Math.min(width, height) * 0.38 * zoomLevel;
+                        this.scale = (2 / (2 - this.z3d)) * zoomLevel;
+                        this.x = width / 2 + this.x3d * radius;
+                        this.y = height / 2 + this.z3d * radius * 0.2; 
+                        this.alpha = (this.z3d + 1) / 2 * 0.7 + 0.3;
+                    }
+                    else if (currentStyle === 'planets') {
+                        this.planetAngle += this.orbitSpeed * speed;
+                        const ellipseX = Math.cos(this.planetAngle) * (this.orbitRadius * zoomLevel);
+                        const ellipseY = Math.sin(this.planetAngle) * (this.orbitRadius * 0.5 * zoomLevel);
+                        
+                        this.x = width / 2 + ellipseX;
+                        this.y = height / 2 + ellipseY;
+                        this.scale = (1 + (Math.sin(this.planetAngle) * 0.2)) * zoomLevel;
+                        this.alpha = 0.75 + (Math.sin(this.planetAngle) * 0.25);
+                        this.z3d = Math.sin(this.planetAngle);
+                    }
+                    else if (currentStyle === 'bubbles') {
+                        this.bx += this.vx * speed;
+                        this.by += this.vy * speed;
+
+                        if (this.bx < 80 || this.bx > width - 80) this.vx *= -1;
+                        if (this.by < 40 || this.by > height - 40) this.vy *= -1;
+
+                        this.x = this.bx;
+                        this.y = this.by;
+                        this.scale = 1.1 * zoomLevel;
+                        this.alpha = 0.9;
+                    }
+                    else if (currentStyle === 'vortex') {
+                        this.vAngle += 0.01 * speed;
+                        let animatedRadius = (this.vRadius + Math.sin(Date.now() * 0.002 + this.index) * 20) * zoomLevel;
+                        this.x = width / 2 + Math.cos(this.vAngle) * animatedRadius;
+                        this.y = height / 2 + Math.sin(this.vAngle) * animatedRadius;
+                        this.scale = (1.2 + Math.sin(this.vAngle) * 0.2) * zoomLevel;
+                        this.alpha = 0.6 + Math.sin(this.vAngle) * 0.4;
+                        this.z3d = Math.sin(this.vAngle);
+                    }
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                const size = Math.max(10, Math.floor(this.fontSize * this.scale));
+                ctx.font = `bold ${size}px 'Segoe UI', system-ui`;
+                const textWidth = ctx.measureText(this.text).width;
+                const paddingX = 14;
+                const paddingY = 7;
+                const boxWidth = textWidth + paddingX * 2;
+                const boxHeight = size + paddingY * 2;
+
+                // Draw background universe object precisely scaled & aligned adjacent to the word size
+                if (currentUniverseBg === 'stars') {
+                    ctx.fillStyle = 'rgba(253, 224, 71, 0.18)';
+                    ctx.strokeStyle = '#fde047';
+                    ctx.lineWidth = 1.5;
+                    ctx.beginPath();
+                    ctx.ellipse(this.x, this.y, boxWidth * 0.55, boxHeight * 0.65, 0, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#fef08a';
+                    ctx.beginPath();
+                    ctx.arc(this.x - boxWidth * 0.45, this.y - boxHeight * 0.35, 3.5, 0, Math.PI * 2);
+                    ctx.fill();
+                } 
+                else if (currentUniverseBg === 'meteorites') {
+                    ctx.strokeStyle = '#fb923c';
+                    ctx.lineWidth = Math.max(3, boxHeight * 0.25);
+                    ctx.beginPath();
+                    ctx.moveTo(this.x - boxWidth * 0.4, this.y);
+                    ctx.lineTo(this.x - boxWidth * 0.4 - this.flightSpeedX * 30, this.y - (this.flightSpeedY * 30 + 10));
+                    ctx.stroke();
+
+                    ctx.fillStyle = 'rgba(251, 146, 60, 0.22)';
+                    ctx.beginPath();
+                    ctx.roundRect(this.x - boxWidth/2, this.y - boxHeight/2, boxWidth, boxHeight, 16);
+                    ctx.fill();
+                }
+                else if (currentUniverseBg === 'galaxies') {
+                    ctx.beginPath();
+                    ctx.roundRect(this.x - boxWidth/2, this.y - boxHeight/2, boxWidth, boxHeight, 16);
+                    ctx.fillStyle = 'rgba(168, 85, 247, 0.22)';
+                    ctx.strokeStyle = '#c084fc';
+                    ctx.lineWidth = 1.8;
+                    ctx.fill();
+                    ctx.stroke();
+                }
+
+                if (currentStyle === 'bubbles' || currentStyle === 'planets' || currentUniverseBg !== 'none') {
+                    ctx.beginPath();
+                    ctx.roundRect(this.x - textWidth/2 - paddingX, this.y - size/2 - paddingY, textWidth + paddingX*2, size + paddingY*2, 16);
+                    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+                    ctx.strokeStyle = this.color;
+                    ctx.lineWidth = 2.2;
+                    ctx.fill();
+                    ctx.stroke();
+                }
+
+                ctx.fillStyle = this.color;
+                ctx.fillText(this.text, this.x, this.y);
+                ctx.restore();
+            }
+
+            isMouseOver(mx, my) {
+                ctx.font = `bold ${Math.floor(this.fontSize * this.scale)}px sans-serif`;
+                const textWidth = ctx.measureText(this.text).width;
+                const h = this.fontSize * this.scale;
+                
+                return Math.abs(mx - this.x) < (textWidth/2 + 14) && Math.abs(my - this.y) < (h/2 + 7);
+            }
+        }
+
+        function initElements() {
+            elements = vocabData.map((data, i) => new VocabWord(data, i));
+            updateEditorList();
+        }
+
+        function updateEditorList() {
+            wordListContainer.innerHTML = '';
+            vocabData.forEach((item, index) => {
+                const row = document.createElement('div');
+                row.className = 'word-item-row';
+                row.innerHTML = `
+                    <div><strong>${item.word}</strong><br><small style="color:#94a3b8">${item.def}</small></div>
+                    <button onclick="removeWord(${index})">Delete</button>
+                `;
+                wordListContainer.appendChild(row);
+            });
+        }
+
+        window.removeWord = function(index) {
+            vocabData.splice(index, 1);
+            initElements();
+        };
+
+        updateCoreBtn.addEventListener('click', () => {
+            coreConfig.title = coreTitleInput.value.trim();
+            coreConfig.desc = coreDescInput.value.trim();
+            coreConfig.radius = parseInt(coreSizeRange.value) || 45;
+
+            const file = coreImageUpload.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        loadedCoreImg = img;
+                        coreConfig.customImage = true;
+                        alert('Center core and image updated successfully!');
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            } else {
+                alert('Center core settings updated successfully!');
+            }
+        });
+
+        removeCoreImgBtn.addEventListener('click', () => {
+            loadedCoreImg = null;
+            coreConfig.customImage = null;
+            coreImageUpload.value = '';
+            alert('Custom core image removed. Default style restored.');
+        });
+
+        addWordBtn.addEventListener('click', () => {
+            const w = newWordInput.value.trim();
+            const d = newDefInput.value.trim();
+            if (w && d) {
+                vocabData.push({ word: w, def: d });
+                newWordInput.value = '';
+                newDefInput.value = '';
+                initElements();
+            }
+        });
+
+        exportCsvBtn.addEventListener('click', () => {
+            let csvContent = "data:text/csv;charset=utf-8,Word,Definition\n";
+            vocabData.forEach(row => {
+                csvContent += `"${row.word}","${row.def}"\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "vocabulary_list.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
+        fullscreenBtn.addEventListener('click', () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    alert(`Error attempting to enable fullscreen: ${err.message}`);
+                });
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        });
+
+        csvUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const text = event.target.result;
+                const lines = text.split(/\r\n|\n/);
+                let addedCount = 0;
+                lines.forEach(line => {
+                    const parts = line.split(',');
+                    if (parts.length >= 2) {
+                        const word = parts[0].trim().replace(/^["']|["']$/g, '');
+                        const def = parts[1].trim().replace(/^["']|["']$/g, '');
+                        if (word && def && word.toLowerCase() !== 'word') {
+                            vocabData.push({ word, def });
+                            addedCount++;
+                        }
+                    }
+                });
+                if (addedCount > 0) {
+                    initElements();
+                    alert(`Successfully imported ${addedCount} vocabulary words!`);
+                } else {
+                    alert('Could not parse file. Ensure format is: Word, Definition');
+                }
+            };
+            reader.readAsText(file);
+            csvUpload.value = '';
+        });
+
+        speedRange.addEventListener('input', (e) => animationSpeed = parseFloat(e.target.value));
+
+        function zoomIn() { zoomLevel = Math.min(zoomLevel + 0.15, 2.0); }
+        function zoomOut() { zoomLevel = Math.max(zoomLevel - 0.15, 0.5); }
+
+        zoomInBtn.addEventListener('click', zoomIn);
+        zoomOutBtn.addEventListener('click', zoomOut);
+
+        window.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.key === '+' || e.key === '=') zoomIn();
+            if (e.key === '-' || e.key === '_') zoomOut();
+            if (e.key === '0') zoomLevel = 1.0;
+        });
+
+        themeSelect.addEventListener('change', (e) => {
+            const t = themes[e.target.value];
+            document.documentElement.style.setProperty('--bg-color', t.bg);
+            document.documentElement.style.setProperty('--panel-bg', t.panel);
+            document.documentElement.style.setProperty('--accent-color', t.accent);
+            document.documentElement.style.setProperty('--text-color', t.text);
+        });
+
+        universeBgSelect.addEventListener('change', (e) => {
+            currentUniverseBg = e.target.value;
+            initElements();
+        });
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            globalAngle += 0.01 * animationSpeed;
+
+            if (currentUniverseBg !== 'none') {
+                backgroundStars.forEach(star => {
+                    star.alpha += star.twinkleSpeed;
+                    if (star.alpha > 1 || star.alpha < 0.2) star.twinkleSpeed *= -1;
+                    ctx.globalAlpha = star.alpha;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                ctx.globalAlpha = 1.0;
+            }
+
+            if (currentStyle === 'planets' && currentUniverseBg === 'none') {
+                ctx.save();
+                const currentCoreRadius = coreConfig.radius * zoomLevel;
+
+                if (loadedCoreImg) {
+                    ctx.beginPath();
+                    ctx.arc(width / 2, height / 2, currentCoreRadius, 0, Math.PI * 2);
+                    ctx.closePath();
+                    ctx.save();
+                    ctx.clip();
+                    ctx.drawImage(loadedCoreImg, width / 2 - currentCoreRadius, height / 2 - currentCoreRadius, currentCoreRadius * 2, currentCoreRadius * 2);
+                    ctx.restore();
+
+                    ctx.beginPath();
+                    ctx.arc(width / 2, height / 2, currentCoreRadius, 0, Math.PI * 2);
+                    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim();
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(width / 2, height / 2, (currentCoreRadius + Math.sin(globalAngle * 2) * 4), 0, Math.PI * 2);
+                    const gradient = ctx.createRadialGradient(width/2, height/2, 5, width/2, height/2, currentCoreRadius * 1.2);
+                    gradient.addColorStop(0, getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim());
+                    gradient.addColorStop(0.7, 'rgba(56, 189, 248, 0.25)');
+                    gradient.addColorStop(1, 'transparent');
+                    ctx.fillStyle = gradient;
+                    ctx.fill();
+                }
+
+                if (coreConfig.title) {
+                    ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim();
+                    ctx.font = `bold ${Math.floor(14 * zoomLevel)}px sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    let textYOffset = loadedCoreImg ? currentCoreRadius + 15 : -8 * zoomLevel;
+                    ctx.fillText(coreConfig.title, width / 2, height / 2 + textYOffset);
+                }
+
+                if (coreConfig.desc) {
+                    ctx.font = `${Math.floor(10 * zoomLevel)}px sans-serif`;
+                    ctx.fillStyle = '#94a3b8';
+                    let descYOffset = loadedCoreImg ? currentCoreRadius + 30 : 10 * zoomLevel;
+                    ctx.fillText(coreConfig.desc, width / 2, height / 2 + descYOffset);
+                }
+                ctx.restore();
+            }
+
+            let hoveredElement = null;
+
+            elements.forEach(el => {
+                el.update(animationSpeed);
+                el.draw();
+                if (mouse.active && el.isMouseOver(mouse.currentX, mouse.currentY)) {
+                    hoveredElement = el;
+                }
+            });
+
+            for (let i = particles.length - 1; i >= 0; i--) {
+                particles[i].update();
+                particles[i].draw();
+                if (particles[i].life <= 0) particles.splice(i, 1);
+            }
+
+            if (hoveredElement && !modal.classList.contains('show') && !editorPanel.classList.contains('open')) {
+                canvas.style.cursor = 'pointer';
+                tooltip.style.display = 'block';
+                tooltip.style.left = `${hoveredElement.x}px`;
+                tooltip.style.top = `${hoveredElement.y - 45}px`;
+                tooltip.innerHTML = `<strong>${hoveredElement.text}</strong><br><small style="font-size:10px; color:#aaa;">Click for definition</small>`;
+                
+                pronounceWord(hoveredElement.text);
+            } else {
+                canvas.style.cursor = 'grab';
+                tooltip.style.display = 'none';
+                if (!hoveredElement) lastSpokenWord = '';
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        container.addEventListener('click', (e) => {
+            if (editorPanel.classList.contains('open')) return;
+            let clickedElement = null;
+            elements.forEach(el => {
+                if (el.isMouseOver(mouse.currentX, mouse.currentY)) {
+                    clickedElement = el;
+                }
+            });
+
+            if (clickedElement) {
+                for (let i = 0; i < 25; i++) {
+                    particles.push(new Particle(clickedElement.x, clickedElement.y, clickedElement.color));
+                }
+                defWord.textContent = clickedElement.text;
+                defWord.style.color = clickedElement.color;
+                defText.textContent = clickedElement.def;
+                modal.classList.add('show');
+            }
+        });
+
+        closeModalBtn.addEventListener('click', () => modal.classList.remove('show'));
+        toggleEditorBtn.addEventListener('click', () => editorPanel.classList.add('open'));
+        closeEditorBtn.addEventListener('click', () => editorPanel.classList.remove('open'));
+
+        container.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouse.currentX = e.clientX - rect.left;
+            mouse.currentY = e.clientY - rect.top;
+            mouse.active = true;
+
+            if (e.buttons === 1 && currentStyle === 'sphere' && currentUniverseBg === 'none') {
+                rotationY = e.movementX * 0.008;
+                rotationX = -e.movementY * 0.008;
+            }
+        });
+
+        container.addEventListener('mouseleave', () => mouse.active = false);
+
+        document.getElementById('style-planets').addEventListener('click', (e) => { currentStyle = 'planets'; setActiveButton(e.target); });
+        document.getElementById('style-sphere').addEventListener('click', (e) => { currentStyle = 'sphere'; setActiveButton(e.target); });
+        document.getElementById('style-ring').addEventListener('click', (e) => { currentStyle = 'ring'; setActiveButton(e.target); });
+        document.getElementById('style-bubbles').addEventListener('click', (e) => { 
+            currentStyle = 'bubbles'; 
+            setActiveButton(e.target);
+            elements.forEach(el => { el.vx = (Math.random() - 0.5) * 2; el.vy = (Math.random() - 0.5) * 2; });
+        });
+        document.getElementById('style-vortex').addEventListener('click', (e) => { currentStyle = 'vortex'; setActiveButton(e.target); });
+
+        function setActiveButton(btn) {
+            document.querySelectorAll('.controls button').forEach(b => {
+                if(b.id.startsWith('style-')) b.classList.remove('active');
+            });
+            btn.classList.add('active');
+        }
+
+        window.addEventListener('resize', resize);
+        resize();
+        animate();
+    </script>
+</body>
+</html>

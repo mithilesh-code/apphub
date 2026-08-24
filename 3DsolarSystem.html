@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Universe Solar System Viewer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        #universe {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: radial-gradient(circle at center, #10152e 0%, #050716 45%, #000 100%);
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* Header Group (Title + Home Button side-by-side cleanly) */
+        #header-group {
+            position: absolute;
+            top: 20px;
+            left: 30px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 20;
+        }
+
+        #title {
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 0 0 10px #00bfff, 0 0 20px #0066ff;
+            letter-spacing: 1px;
+            white-space: nowrap;
+        }
+
+        #homeBtn {
+            background: rgba(10, 15, 40, 0.85);
+            border: 1px solid #287cff;
+            color: #4db8ff;
+            padding: 6px 14px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: bold;
+            box-shadow: 0 0 15px rgba(0, 120, 255, 0.3);
+            backdrop-filter: blur(5px);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        #homeBtn:hover {
+            background: rgba(40, 124, 255, 0.4);
+            color: #fff;
+        }
+
+        /* Control Panel */
+        #controls {
+            position: absolute;
+            left: 25px;
+            top: 80px;
+            width: 280px;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+            padding: 15px 20px;
+            background: rgba(10, 15, 40, 0.85);
+            border: 1px solid #287cff;
+            border-radius: 15px;
+            box-shadow: 0 0 25px rgba(0, 120, 255, 0.4);
+            z-index: 20;
+            backdrop-filter: blur(5px);
+        }
+
+        #controls::-webkit-scrollbar {
+            width: 5px;
+        }
+        #controls::-webkit-scrollbar-thumb {
+            background: #287cff;
+            border-radius: 5px;
+        }
+
+        #controls h3 {
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: #4db8ff;
+            font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .control-group {
+            margin-bottom: 12px;
+        }
+
+        .control-group label {
+            display: flex;
+            justify-content: space-between;
+            color: #ccc;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .control-group span {
+            color: #4db8ff;
+            font-weight: bold;
+        }
+
+        .control-group input[type="range"] {
+            width: 100%;
+            accent-color: #00bfff;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 8px;
+            cursor: pointer;
+            color: #fff;
+            font-size: 13px;
+        }
+
+        /* Launch Section */
+        .launch-box {
+            background: rgba(0, 15, 35, 0.6);
+            border: 1px dashed rgba(40, 124, 255, 0.5);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .launch-selects {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+
+        .launch-selects select {
+            flex: 1;
+            background: #0a0f28;
+            color: #fff;
+            border: 1px solid #287cff;
+            padding: 5px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        #launchBtn {
+            width: 100%;
+            background: rgba(40, 124, 255, 0.4);
+            border: 1px solid #287cff;
+            color: #fff;
+            padding: 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+
+        #launchBtn:hover {
+            background: rgba(40, 124, 255, 0.8);
+        }
+
+        /* Info Display Card */
+        #info {
+            position: absolute;
+            right: 25px;
+            top: 25px;
+            width: 280px;
+            padding: 20px;
+            background: rgba(10, 15, 40, 0.85);
+            border: 1px solid #287cff;
+            border-radius: 15px;
+            box-shadow: 0 0 25px rgba(0, 120, 255, 0.4);
+            z-index: 20;
+            backdrop-filter: blur(5px);
+        }
+
+        #info h2 {
+            margin-top: 0;
+            color: #4db8ff;
+            font-size: 20px;
+        }
+
+        #info p {
+            color: #ccc;
+            line-height: 1.5;
+            font-size: 13px;
+            margin-bottom: 0;
+        }
+    </style>
+</head>
+<body>
+<div id="universe">
+    <!-- Header Group (Title & Home Button) -->
+    <div id="header-group">
+        <div id="title">🌌 3D Solar System Explorer</div>
+        <a href="index.html" id="homeBtn">🏠 Home</a>
+    </div>
+    
+    <!-- Simulation Control Panel -->
+    <div id="controls">
+        <h3>Simulation Controls</h3>
+        
+        <div class="control-group">
+            <label>Planet Scale: <span id="sizeVal">1.0x</span></label>
+            <input type="range" id="sizeSlider" min="0.5" max="3.0" step="0.1" value="1.0">
+        </div>
+
+        <div class="control-group">
+            <label>Orbit Radius: <span id="orbitRadiusVal">1.0x</span></label>
+            <input type="range" id="orbitRadiusSlider" min="0.5" max="2.0" step="0.1" value="1.0">
+        </div>
+
+        <div class="control-group">
+            <label>Moon Size: <span id="moonSizeVal">1.0x</span></label>
+            <input type="range" id="moonSizeSlider" min="0.5" max="3.0" step="0.1" value="1.0">
+        </div>
+
+        <div class="control-group">
+            <label>Orbit Speed: <span id="speedVal">1.0x</span></label>
+            <input type="range" id="speedSlider" min="0" max="4.0" step="0.2" value="1.0">
+        </div>
+
+        <div class="control-group">
+            <label>Label Font Size: <span id="fontVal">11px</span></label>
+            <input type="range" id="fontSizeSlider" min="8" max="24" step="1" value="11">
+        </div>
+
+        <div class="control-group checkbox-group">
+            <label><input type="checkbox" id="toggleOrbits" checked> Show Orbit Lines</label>
+        </div>
+
+        <div class="control-group checkbox-group">
+            <label><input type="checkbox" id="toggleMoons"> Show Natural Satellites</label>
+        </div>
+
+        <div class="control-group checkbox-group">
+            <label><input type="checkbox" id="toggleGalaxy"> Galactic Revolution</label>
+        </div>
+
+        <div class="control-group checkbox-group">
+            <label><input type="checkbox" id="toggleSpaceView"> Space View Drift</label>
+        </div>
+
+        <!-- Rocket Launch Control -->
+        <div class="launch-box">
+            <label style="font-weight: bold; color: #4db8ff; margin-bottom: 6px;">🚀 Interplanetary Launch</label>
+            <div class="launch-selects">
+                <select id="launchFrom"></select>
+                <select id="launchTo"></select>
+            </div>
+            <button id="launchBtn">Launch Vehicle</button>
+        </div>
+    </div>
+
+    <canvas id="space"></canvas>
+
+    <div id="info">
+        <h2>Solar System</h2>
+        <p>Click on any planet body to stream live specs, radius info, and characteristics.</p>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById("space");
+    const ctx = canvas.getContext("2d");
+    const info = document.getElementById("info");
+    
+    // UI Elements
+    const sizeSlider = document.getElementById("sizeSlider");
+    const sizeVal = document.getElementById("sizeVal");
+    const orbitRadiusSlider = document.getElementById("orbitRadiusSlider");
+    const orbitRadiusVal = document.getElementById("orbitRadiusVal");
+    const moonSizeSlider = document.getElementById("moonSizeSlider");
+    const moonSizeVal = document.getElementById("moonSizeVal");
+    const speedSlider = document.getElementById("speedSlider");
+    const speedVal = document.getElementById("speedVal");
+    const fontSizeSlider = document.getElementById("fontSizeSlider");
+    const fontVal = document.getElementById("fontVal");
+    const toggleOrbits = document.getElementById("toggleOrbits");
+    const toggleMoons = document.getElementById("toggleMoons");
+    const toggleGalaxy = document.getElementById("toggleGalaxy");
+    const toggleSpaceView = document.getElementById("toggleSpaceView");
+    const launchFromSelect = document.getElementById("launchFrom");
+    const launchToSelect = document.getElementById("launchTo");
+    const launchBtn = document.getElementById("launchBtn");
+
+    let width, height;
+    let planetSizeMultiplier = 1.0;
+    let orbitRadiusMultiplier = 1.0;
+    let moonSizeMultiplier = 1.0;
+    let orbitSpeedMultiplier = 1.0;
+    let labelFontSize = 11;
+    let renderOrbits = true;
+    let renderMoons = false;
+    let galacticRevolutionActive = false;
+    let spaceViewActive = false;
+
+    // Rocket Flight State
+    let activeRocket = null;
+
+    // Track active center coordinates for click detection & rendering
+    let currentCx = 0;
+    let currentCy = 0;
+
+    // Listeners for Control Panel Sliders & Checkboxes
+    sizeSlider.addEventListener("input", (e) => {
+        planetSizeMultiplier = parseFloat(e.target.value);
+        sizeVal.textContent = planetSizeMultiplier.toFixed(1) + "x";
+    });
+
+    orbitRadiusSlider.addEventListener("input", (e) => {
+        orbitRadiusMultiplier = parseFloat(e.target.value);
+        orbitRadiusVal.textContent = orbitRadiusMultiplier.toFixed(1) + "x";
+    });
+
+    moonSizeSlider.addEventListener("input", (e) => {
+        moonSizeMultiplier = parseFloat(e.target.value);
+        moonSizeVal.textContent = moonSizeMultiplier.toFixed(1) + "x";
+    });
+
+    speedSlider.addEventListener("input", (e) => {
+        orbitSpeedMultiplier = parseFloat(e.target.value);
+        speedVal.textContent = orbitSpeedMultiplier.toFixed(1) + "x";
+    });
+
+    fontSizeSlider.addEventListener("input", (e) => {
+        labelFontSize = parseInt(e.target.value);
+        fontVal.textContent = labelFontSize + "px";
+    });
+
+    toggleOrbits.addEventListener("change", (e) => {
+        renderOrbits = e.target.checked;
+    });
+
+    toggleMoons.addEventListener("change", (e) => {
+        renderMoons = e.target.checked;
+    });
+
+    toggleGalaxy.addEventListener("change", (e) => {
+        galacticRevolutionActive = e.target.checked;
+    });
+
+    toggleSpaceView.addEventListener("change", (e) => {
+        spaceViewActive = e.target.checked;
+    });
+
+    // Embedded Planet Data & Telemetry
+    const planets = [
+        { name: "Mercury", distance: 55, size: 4, color: "#aaa", radiusKm: "2,440 km", period: "88 days" },
+        { name: "Venus", distance: 80, size: 7, color: "#d9a441", radiusKm: "6,051 km", period: "225 days" },
+        { name: "Earth", distance: 110, size: 8, color: "#4287f5", radiusKm: "6,371 km", period: "365.25 days", moons: [{ name: "Moon", distance: 16, size: 2.2, color: "#ccc", speedFactor: 3 }] },
+        { name: "Mars", distance: 145, size: 6, color: "#e34a33", radiusKm: "3,389 km", period: "687 days", moons: [{ name: "Phobos", distance: 11, size: 1.4, color: "#999", speedFactor: 4 }, { name: "Deimos", distance: 17, size: 1.1, color: "#aaa", speedFactor: 2.5 }] },
+        { name: "Jupiter", distance: 190, size: 14, color: "#d6a46c", radiusKm: "69,911 km", period: "11.9 years", moons: [{ name: "Io", distance: 22, size: 2, color: "#e3c16f", speedFactor: 5 }, { name: "Europa", distance: 28, size: 1.8, color: "#c2d1e0", speedFactor: 3.8 }, { name: "Ganymede", distance: 36, size: 2.6, color: "#a38c6c", speedFactor: 2.5 }, { name: "Callisto", distance: 44, size: 2.4, color: "#7a6b58", speedFactor: 1.8 }] },
+        { name: "Saturn", distance: 240, size: 12, color: "#e8c878", radiusKm: "58,232 km", period: "29.5 years", moons: [{ name: "Titan", distance: 30, size: 2.8, color: "#d9ae68", speedFactor: 2.2 }] },
+        { name: "Uranus", distance: 290, size: 10, color: "#72d6e8", radiusKm: "25,362 km", period: "84 years" },
+        { name: "Neptune", distance: 335, size: 10, color: "#4169e1", radiusKm: "24,622 km", period: "165 years" }
+    ];
+
+    // Populate Launch Dropdowns
+    planets.forEach(p => {
+        const opt1 = document.createElement("option");
+        opt1.value = p.name;
+        opt1.textContent = p.name;
+        launchFromSelect.appendChild(opt1);
+
+        const opt2 = document.createElement("option");
+        opt2.value = p.name;
+        opt2.textContent = p.name;
+        launchToSelect.appendChild(opt2);
+    });
+    if (planets.length > 1) launchToSelect.selectedIndex = 2;
+
+    const planetInfo = {
+        Mercury: "The smallest planet and the closest planet to the Sun. Experiences extreme temperature swings.",
+        Venus: "A blazing hot world with a dense, toxic carbon-dioxide atmosphere and runaway greenhouse effect.",
+        Earth: "Our home planet, uniquely harboring liquid water, robust plate tectonics, and abundant life.",
+        Mars: "The red planet, home to vast iron-oxide deserts, ancient riverbeds, and Olympus Mons.",
+        Jupiter: "The largest gas giant in our system, famous for its iconic Great Red Spot storm.",
+        Saturn: "A gas giant distinguished by a magnificent, complex icy ring system.",
+        Uranus: "An ice giant whose rotational axis is tilted almost completely sideways.",
+        Neptune: "A distant, deep blue ice giant swept by supersonic winds and dark storms."
+    };
+
+    function resizeCanvas() {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    // STAR FIELD GENERATION
+    const stars = [];
+    for (let i = 0; i < 600; i++) {
+        stars.push({
+            x: Math.random(),
+            y: Math.random(),
+            size: Math.random() * 1.8,
+            brightness: Math.random()
+        });
+    }
+
+    function drawStars() {
+        for (const star of stars) {
+            const x = star.x * width;
+            const y = star.y * height;
+            ctx.beginPath();
+            ctx.arc(x, y, star.size, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255,255,255,${star.brightness})`;
+            ctx.fill();
+        }
+    }
+
+    // DRAW SUN WITH DYNAMIC GLOW
+    function drawSun(cx, cy) {
+        const sunRadius = 40 * Math.max(0.8, planetSizeMultiplier * 0.6);
+        const gradient = ctx.createRadialGradient(cx, cy, 5, cx, cy, sunRadius);
+        gradient.addColorStop(0, "#fff");
+        gradient.addColorStop(0.3, "#fff700");
+        gradient.addColorStop(0.6, "#ff8c00");
+        gradient.addColorStop(1, "rgba(255,50,0,0)");
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, sunRadius, 0, Math.PI * 2);
+        ctx.fillStyle = gradient;
+        ctx.fill();
+    }
+
+    // HELPER TO COMPUTE PLANET POSITION
+    function getPlanetCoordinates(planet, time, index) {
+        const orbit = planet.distance * orbitRadiusMultiplier * Math.min(width, height) / 900;
+        const speed = 0.0004 * orbitSpeedMultiplier / (index + 0.8);
+        const angle = time * speed + index;
+        return {
+            x: currentCx + Math.cos(angle) * orbit,
+            y: currentCy + Math.sin(angle) * orbit,
+            angle: angle,
+            orbit: orbit
+        };
+    }
+
+    // DRAW PLANET, ORBITS, MOONS & LABELS
+    function drawPlanet(planet, cx, cy, time, index) {
+        const coords = getPlanetCoordinates(planet, time, index);
+        const x = coords.x;
+        const y = coords.y;
+
+        // Render Orbit Paths Toggle
+        if (renderOrbits) {
+            ctx.beginPath();
+            ctx.arc(cx, cy, coords.orbit, 0, Math.PI * 2);
+            ctx.strokeStyle = "rgba(100,150,255,0.12)";
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+        // Current Scaled Planet Size
+        const currentSize = planet.size * planetSizeMultiplier;
+
+        // Planet Body Rendering
+        ctx.beginPath();
+        ctx.arc(x, y, currentSize, 0, Math.PI * 2);
+        ctx.fillStyle = planet.color;
+        ctx.shadowBlur = 12 * planetSizeMultiplier;
+        ctx.shadowColor = planet.color;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // Saturn Rings
+        if (planet.name === "Saturn") {
+            ctx.beginPath();
+            ctx.ellipse(x, y, currentSize * 2.2, currentSize * 0.7, 0.3, 0, Math.PI * 2);
+            ctx.strokeStyle = "#d9c38a";
+            ctx.lineWidth = Math.max(2, 3 * planetSizeMultiplier);
+            ctx.stroke();
+            ctx.lineWidth = 1;
+        }
+
+        // Render Natural Satellites (Moons with Names & Scaling)
+        if (renderMoons && planet.moons) {
+            planet.moons.forEach((moon, mIndex) => {
+                const moonAngle = time * 0.0015 * moon.speedFactor + mIndex * 2;
+                const moonDist = moon.distance * Math.max(0.7, planetSizeMultiplier * 0.8);
+                const mx = x + Math.cos(moonAngle) * moonDist;
+                const my = y + Math.sin(moonAngle) * moonDist;
+                const currentMoonSize = moon.size * moonSizeMultiplier;
+
+                ctx.beginPath();
+                ctx.arc(mx, my, currentMoonSize, 0, Math.PI * 2);
+                ctx.fillStyle = moon.color;
+                ctx.fill();
+
+                // Moon Label
+                ctx.fillStyle = "#bbb";
+                ctx.font = `${Math.max(8, labelFontSize - 2)}px Arial`;
+                ctx.fillText(moon.name, mx + currentMoonSize + 4, my + 3);
+            });
+        }
+
+        // Dynamic Planet Font Label
+        ctx.fillStyle = "#eee";
+        ctx.font = `${labelFontSize}px Arial`;
+        ctx.fillText(planet.name, x + currentSize + 6, y + 4);
+    }
+
+    // LAUNCH ROCKET ACTION & ANIMATION
+    launchBtn.addEventListener("click", () => {
+        const fromName = launchFromSelect.value;
+        const toName = launchToSelect.value;
+
+        if (fromName === toName) {
+            info.innerHTML = `
+                <h2>Launch Aborted</h2>
+                <p>Source and destination planets cannot be identical. Please select two different worlds.</p>
+            `;
+            return;
+        }
+
+        const fromPlanetObj = planets.find(p => p.name === fromName);
+        const toPlanetObj = planets.find(p => p.name === toName);
+
+        activeRocket = {
+            from: fromPlanetObj,
+            to: toPlanetObj,
+            fromIndex: planets.indexOf(fromPlanetObj),
+            toIndex: planets.indexOf(toPlanetObj),
+            progress: 0,
+            duration: 180
+        };
+
+        info.innerHTML = `
+            <h2>🚀 Launch Initiated!</h2>
+            <p>Spacecraft en route from <b>${fromName}</b> to <b>${toName}</b>.<br>Telemetry tracking active...</p>
+        `;
+    });
+
+    function drawRocket(time) {
+        if (!activeRocket) return;
+
+        const fromCoords = getPlanetCoordinates(activeRocket.from, time, activeRocket.fromIndex);
+        const toCoords = getPlanetCoordinates(activeRocket.to, time, activeRocket.toIndex);
+
+        activeRocket.progress += 1 / activeRocket.duration;
+        const p = Math.min(1, activeRocket.progress);
+
+        const currentX = fromCoords.x + (toCoords.x - fromCoords.x) * p;
+        const currentY = fromCoords.y + (toCoords.y - fromCoords.y) * p - Math.sin(p * Math.PI) * 70;
+
+        ctx.beginPath();
+        ctx.arc(currentX, currentY, 4, 0, Math.PI * 2);
+        ctx.fillStyle = "#00ffff";
+        ctx.shadowBlur = 10;
+        ctx.shadowColor = "#00ffff";
+        ctx.fill();
+        ctx.shadowBlur = 0;
+
+        ctx.fillStyle = "#00ffff";
+        ctx.font = "10px Arial";
+        ctx.fillText("🚀 Vessel", currentX + 8, currentY - 4);
+
+        if (p >= 1) {
+            info.innerHTML = `
+                <h2>🎉 Mission Successful</h2>
+                <p>Spacecraft has successfully arrived at <b>${activeRocket.to.name}</b> orbit!</p>
+            `;
+            activeRocket = null;
+        }
+    }
+
+    // MAIN ANIMATION LOOP
+    let lastTime = 0;
+    let accumulatedTime = 0;
+
+    function animate(timestamp) {
+        if (!lastTime) lastTime = timestamp;
+        const delta = timestamp - lastTime;
+        lastTime = timestamp;
+
+        accumulatedTime += delta * 0.5;
+
+        ctx.clearRect(0, 0, width, height);
+        drawStars();
+
+        const baseCx = width / 2;
+        const baseCy = height / 2;
+        let sunX = baseCx;
+        let sunY = baseCy;
+
+        // Galactic Revolution Mode: Sun revolves around galactic center
+        if (galacticRevolutionActive) {
+            const galacticAngle = accumulatedTime * 0.00008;
+            const galacticRadius = 140;
+            sunX = baseCx + Math.cos(galacticAngle) * galacticRadius;
+            sunY = baseCy + Math.sin(galacticAngle) * galacticRadius;
+
+            if (renderOrbits) {
+                ctx.beginPath();
+                ctx.arc(baseCx, baseCy, galacticRadius, 0, Math.PI * 2);
+                ctx.strokeStyle = "rgba(255, 100, 255, 0.1)";
+                ctx.lineWidth = 1;
+                ctx.setLineDash([5, 5]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        }
+
+        // Optional Space View Drift offset
+        if (spaceViewActive) {
+            sunX += Math.sin(accumulatedTime * 0.00015) * (width * 0.15);
+            sunY += Math.cos(accumulatedTime * 0.0001) * (height * 0.15);
+        }
+
+        currentCx = sunX;
+        currentCy = sunY;
+
+        drawSun(currentCx, currentCy);
+
+        planets.forEach((planet, index) => {
+            drawPlanet(planet, currentCx, currentCy, accumulatedTime, index);
+        });
+
+        drawRocket(accumulatedTime);
+
+        requestAnimationFrame(animate);
+    }
+
+    // INTERACTIVE CLICK DETECTION
+    canvas.addEventListener("click", function(event) {
+        const mouseX = event.clientX;
+        const mouseY = event.clientY;
+
+        planets.forEach((planet, index) => {
+            const coords = getPlanetCoordinates(planet, accumulatedTime, index);
+            const currentSize = planet.size * planetSizeMultiplier;
+
+            const distance = Math.sqrt((mouseX - coords.x) ** 2 + (mouseY - coords.y) ** 2);
+
+            if (distance < currentSize + 12) {
+                info.innerHTML = `
+                    <h2>${planet.name}</h2>
+                    <p><b>Radius:</b> ${planet.radiusKm}<br>
+                    <b>Orbital Period:</b> ${planet.period}</p>
+                    <p style="margin-top:8px;">${planetInfo[planet.name]}</p>
+                `;
+            }
+        });
+    });
+
+    // Initialize animation execution
+    requestAnimationFrame(animate);
+</script>
+</body>
+</html>
