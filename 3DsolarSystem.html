@@ -76,9 +76,9 @@
 
         #controlsToggleBtn {
             position: absolute;
-            top: 52px;
-            left: 25px;
-            z-index: 21;
+            position: relative;
+            top: auto;
+            left: auto;
             background: rgba(10, 15, 40, 0.9);
             border: 1px solid #287cff;
             color: #4db8ff;
@@ -120,15 +120,24 @@
             display: none;
         }
 
-        body.controls-hidden #controlsToggleBtn {
-            top: 80px;
+        #simulatorDock {
+            position: absolute;
+            top: 52px;
+            left: 25px;
+            z-index: 21;
+            touch-action: none;
+        }
+
+        #simulatorDock.dragging {
+            cursor: grabbing;
+            user-select: none;
         }
 
         /* Control Panel */
         #controls {
-            position: absolute;
-            left: 25px;
-            top: 80px;
+            position: relative;
+            left: 0;
+            top: 8px;
             width: min(var(--controls-width, 390px), calc(100vw - 30px));
             max-height: calc(100vh - 100px);
             overflow: visible;
@@ -373,6 +382,12 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            cursor: grab;
+        }
+
+        #simulatorDock.dragging #controls > h3,
+        #simulatorDock.dragging #controlsToggleBtn {
+            cursor: grabbing;
         }
 
         .control-group {
@@ -507,13 +522,21 @@
         }
 
         body.fullscreen-active #header-group,
-        body.fullscreen-active #controls,
-        body.fullscreen-active #controlsToggleBtn,
         body.fullscreen-active #info {
             display: none;
         }
 
-        body.fullscreen-active.fullscreen-controls-visible #controls {
+        body.fullscreen-active #simulatorDock {
+            display: block;
+        }
+
+        body.fullscreen-active #simulatorDock #controls,
+        body.fullscreen-active #simulatorDock #controlsToggleBtn {
+            display: none;
+        }
+
+        body.fullscreen-active.fullscreen-controls-visible #simulatorDock #controls,
+        body.fullscreen-active.fullscreen-controls-visible #simulatorDock #controlsToggleBtn {
             display: block;
         }
 
@@ -575,10 +598,11 @@
         <a href="index.html" id="homeBtn">🏠 Home</a>
     </div>
 
-    <button id="controlsToggleBtn" type="button" aria-expanded="true">☰ Hide Controls</button>
-    
-    <!-- Simulation Control Panel -->
-    <div id="controls">
+    <div id="simulatorDock">
+        <button id="controlsToggleBtn" type="button" aria-expanded="true">☰ Hide Controls</button>
+
+        <!-- Simulation Control Panel -->
+        <div id="controls">
         <h3>Simulation Controls</h3>
 
         <section class="control-section wide">
@@ -664,6 +688,7 @@
             </div>
             <button id="launchBtn">Launch Vehicle</button>
         </div>
+        </div>
     </div>
 
     <button id="fullscreenBtn" type="button" title="Enter full screen" aria-label="Enter full screen">⛶</button>
@@ -680,6 +705,7 @@
     const canvas = document.getElementById("space");
     const ctx = canvas.getContext("2d");
     const universe = document.getElementById("universe");
+    const controls = document.getElementById("controls");
     const info = document.getElementById("info");
     
     // UI Elements
@@ -740,6 +766,59 @@
     // Track active center coordinates for click detection & rendering
     let currentCx = 0;
     let currentCy = 0;
+    let dockDrag = null;
+    let suppressToggleClick = false;
+
+    function clampDockPosition(left, top) {
+        const dockRect = simulatorDock.getBoundingClientRect();
+        const maxLeft = Math.max(0, window.innerWidth - dockRect.width);
+        const maxTop = Math.max(0, window.innerHeight - dockRect.height);
+        return {
+            left: Math.max(0, Math.min(left, maxLeft)),
+            top: Math.max(0, Math.min(top, maxTop))
+        };
+    }
+
+    function beginDockDrag(event) {
+        if (event.button !== 0) return;
+        const rect = simulatorDock.getBoundingClientRect();
+        dockDrag = {
+            startX: event.clientX,
+            startY: event.clientY,
+            startLeft: rect.left,
+            startTop: rect.top,
+            moved: false
+        };
+        simulatorDock.classList.add("dragging");
+        event.currentTarget.setPointerCapture(event.pointerId);
+        event.preventDefault();
+    }
+
+    function moveDock(event) {
+        if (!dockDrag) return;
+        const deltaX = event.clientX - dockDrag.startX;
+        const deltaY = event.clientY - dockDrag.startY;
+        if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) dockDrag.moved = true;
+        const position = clampDockPosition(dockDrag.startLeft + deltaX, dockDrag.startTop + deltaY);
+        simulatorDock.style.left = `${position.left}px`;
+        simulatorDock.style.top = `${position.top}px`;
+    }
+
+    function endDockDrag(event) {
+        if (!dockDrag) return;
+        suppressToggleClick = dockDrag.moved;
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+        simulatorDock.classList.remove("dragging");
+        dockDrag = null;
+    }
+
+    const simulatorDock = document.getElementById("simulatorDock");
+    [controlsToggleBtn, controls.querySelector("h3")].forEach(handle => {
+        handle.addEventListener("pointerdown", beginDockDrag);
+        handle.addEventListener("pointermove", moveDock);
+        handle.addEventListener("pointerup", endDockDrag);
+        handle.addEventListener("pointercancel", endDockDrag);
+    });
 
     // Listeners for Control Panel Sliders & Checkboxes
     controlsSizeSlider.addEventListener("input", (e) => {
@@ -809,6 +888,10 @@
     });
 
     controlsToggleBtn.addEventListener("click", () => {
+        if (suppressToggleClick) {
+            suppressToggleClick = false;
+            return;
+        }
         const controlsHidden = document.body.classList.toggle("controls-hidden");
         controlsToggleBtn.textContent = controlsHidden ? "☰ Show Controls" : "☰ Hide Controls";
         controlsToggleBtn.setAttribute("aria-expanded", String(!controlsHidden));
