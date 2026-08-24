@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Client-side OCR with PDF/image support and layout-aware editable HTML reconstruction.">
+  <title>FormatOCR — Local PDF & Image OCR</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@6/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docx@9.5.1/build/index.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/utif@3.1.0/UTIF.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow">LOCAL OCR WORKSPACE</div>
+        <h1>FormatOCR</h1>
+        <p class="subtitle">Extract text from PDFs and images while reconstructing approximate layout and formatting.</p>
+      </div>
+      <div class="topbar-actions">
+        <span class="privacy-pill">🔒 Local browser processing</span>
+        <a href="../index.html" class="primary-btn home-btn">⌂ Home</a>
+        <button id="themeBtn" class="icon-btn" title="Toggle dark/light mode" aria-label="Toggle dark/light mode">☾</button>
+      </div>
+    </header>
+
+    <main>
+      <section id="dropZone" class="drop-zone">
+        <input id="fileInput" type="file" hidden multiple accept=".pdf,.png,.jpg,.jpeg,.webp,.bmp,.tif,.tiff,application/pdf,image/*">
+        <div class="drop-icon">⇧</div>
+        <h2>Drop PDF or images here</h2>
+        <p>PNG, JPG/JPEG, WEBP, BMP, TIFF, PDF · Multiple files supported</p>
+        <div class="drop-actions">
+          <button id="browseBtn" class="primary-btn">Choose files</button>
+          <button id="pasteBtn" class="secondary-btn">Paste from clipboard</button>
+        </div>
+        <div class="paste-note">You can also paste a screenshot directly with Cmd/Ctrl+V.</div>
+        <div class="drop-note">Files stay on your device. External requests are limited to loading browser libraries and OCR language models.</div>
+      </section>
+
+      <section class="workspace">
+        <aside class="sidebar">
+          <div class="panel-head">
+            <h3>Documents</h3>
+            <button id="clearBtn" class="ghost-btn">Clear</button>
+          </div>
+          <div id="fileList" class="file-list empty-state">No files loaded.</div>
+
+          <div class="settings-card">
+            <div class="panel-head"><h3>OCR settings</h3></div>
+            <label>Languages</label>
+            <div class="lang-grid">
+              <label><input type="checkbox" name="lang" value="eng" checked> English</label>
+              <label><input type="checkbox" name="lang" value="hin"> Hindi</label>
+              <label><input type="checkbox" name="lang" value="san"> Sanskrit</label>
+              <label><input type="checkbox" name="lang" value="ara"> Arabic</label>
+              <label><input type="checkbox" name="lang" value="rus"> Russian</label>
+              <label><input type="checkbox" name="lang" value="chi_sim"> Chinese</label>
+              <label><input type="checkbox" name="lang" value="jpn"> Japanese</label>
+              <label><input type="checkbox" name="lang" value="kor"> Korean</label>
+              <label><input type="checkbox" name="lang" value="ben"> Bengali</label>
+              <label><input type="checkbox" name="lang" value="tam"> Tamil</label>
+            </div>
+            <label class="field-label">Custom language code(s)</label>
+            <input id="customLang" class="text-input" placeholder="e.g. fra+deu+tel">
+            <button id="detectBtn" class="secondary-btn small">Auto-detect language</button>
+            <div class="helper">Tesseract language models are downloaded on first use and cached by the browser.</div>
+
+            <label class="toggle-row"><input id="directPdfText" type="checkbox" checked><span>Use embedded PDF text when available</span></label>
+            <label class="toggle-row"><input id="lowConfToggle" type="checkbox" checked><span>Highlight low-confidence text</span></label>
+            <label class="toggle-row"><input id="estimateColors" type="checkbox" checked><span>Estimate text/background colors</span></label>
+          </div>
+
+          <div class="settings-card">
+            <div class="panel-head"><h3>Preprocessing</h3></div>
+            <label class="toggle-row"><input id="autoRotate" type="checkbox" checked><span>Auto-rotate / deskew</span></label>
+            <label class="toggle-row"><input id="grayScale" type="checkbox"><span>Grayscale</span></label>
+            <label class="toggle-row"><input id="threshold" type="checkbox"><span>Threshold / binarize</span></label>
+            <label class="toggle-row"><input id="sharpen" type="checkbox"><span>Sharpen</span></label>
+            <label class="field-label">Scale</label>
+            <input id="scaleRange" type="range" min="1" max="2.5" value="1.4" step="0.1">
+            <div class="range-value" id="scaleValue">1.4×</div>
+            <button id="previewProcessBtn" class="secondary-btn small">Preview processing</button>
+          </div>
+        </aside>
+
+        <section class="main-panel">
+          <div class="toolbar-row">
+            <div class="status-area">
+              <span id="statusDot" class="status-dot idle"></span>
+              <span id="statusText">Ready</span>
+              <span id="progressLabel" class="muted">0%</span>
+            </div>
+            <div class="action-row">
+              <button id="ocrBtn" class="primary-btn" disabled>Run OCR</button>
+              <button id="cancelBtn" class="danger-btn" disabled>Cancel</button>
+              <button id="rerunBtn" class="secondary-btn" disabled>Re-run</button>
+            </div>
+          </div>
+          <div class="progress-bar"><div id="progressBar" class="progress-fill"></div></div>
+
+          <div class="viewer-grid">
+            <section class="viewer-card">
+              <div class="viewer-title"><span>Original</span><span id="pageLabel">Page 0 / 0</span></div>
+              <div id="originalViewer" class="viewer original-viewer empty-viewer">Upload a document to preview it.</div>
+              <div id="thumbs" class="thumbs"></div>
+            </section>
+            <section class="viewer-card">
+              <div class="viewer-title">
+                <span>OCR representation</span>
+                <div class="view-mode-tabs">
+                  <button data-mode="rich" class="tab-btn active">Rich</button>
+                  <button data-mode="text" class="tab-btn">Plain</button>
+                </div>
+              </div>
+              <div id="richEditor" class="viewer editable-viewer" contenteditable="true" spellcheck="false"></div>
+              <textarea id="plainEditor" class="viewer plain-editor hidden" spellcheck="false"></textarea>
+            </section>
+          </div>
+
+          <section class="comparison-card">
+            <div class="comparison-head">
+              <div><strong>Compare</strong><span class="muted"> overlay OCR geometry over the original page</span></div>
+              <label class="toggle-row compact"><input id="overlayToggle" type="checkbox"><span>Show OCR boxes</span></label>
+            </div>
+            <div id="compareViewer" class="compare-viewer"></div>
+          </section>
+
+          <section class="editor-card">
+            <div class="format-toolbar">
+              <select id="fontFamily" title="Font family">
+                <option value="Arial">Arial</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Verdana">Verdana</option>
+                <option value="Noto Sans Devanagari">Noto Sans Devanagari</option>
+                <option value="Noto Sans Arabic">Noto Sans Arabic</option>
+                <option value="serif">Serif</option>
+                <option value="sans-serif">Sans-serif</option>
+              </select>
+              <select id="fontSize" title="Font size">
+                <option value="12px">12</option><option value="14px">14</option><option value="16px" selected>16</option><option value="18px">18</option><option value="20px">20</option><option value="24px">24</option><option value="28px">28</option><option value="32px">32</option><option value="40px">40</option>
+              </select>
+              <button data-command="bold" class="format-btn"><b>B</b></button>
+              <button data-command="italic" class="format-btn"><i>I</i></button>
+              <button data-command="underline" class="format-btn"><u>U</u></button>
+              <button data-command="justifyLeft" class="format-btn">⇤</button>
+              <button data-command="justifyCenter" class="format-btn">≡</button>
+              <button data-command="justifyRight" class="format-btn">⇥</button>
+              <label class="color-control" title="Text colour">A<input id="textColor" type="color" value="#20242a"></label>
+              <button id="undoBtn" class="format-btn">↶</button>
+              <button id="redoBtn" class="format-btn">↷</button>
+              <div class="toolbar-spacer"></div>
+              <button id="searchBtn" class="secondary-btn small">Search/Replace</button>
+            </div>
+            <div class="editor-footer"><span>Editable reconstruction. Formatting is estimated where the source is rasterized.</span><span id="confidenceSummary">Confidence: —</span></div>
+          </section>
+
+          <section class="export-card">
+            <div class="panel-head"><h3>Export</h3><span class="muted">Use the reconstructed document or plain OCR text.</span></div>
+            <div class="export-grid">
+              <button data-export="txt" class="export-btn">TXT</button>
+              <button data-export="html" class="export-btn">HTML</button>
+              <button data-export="json" class="export-btn">JSON</button>
+              <button data-export="docx" class="export-btn">DOCX</button>
+              <button id="searchPdfBtn" class="export-btn">Searchable PDF*</button>
+            </div>
+            <div class="helper">* Searchable-PDF export is enabled only when PDF.js and the browser canvas pipeline are available; it creates a text-overlay PDF-like HTML package as a fallback when full PDF writing is unavailable.</div>
+          </section>
+        </section>
+      </section>
+    </main>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-card">
+        <div class="panel-head"><h3 id="modalTitle">Search & Replace</h3><button id="modalClose" class="icon-btn">×</button></div>
+        <div class="modal-body" id="modalBody"></div>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
