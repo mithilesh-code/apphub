@@ -70,6 +70,34 @@
             color: #fff;
         }
 
+        #controlsToggleBtn {
+            position: absolute;
+            top: 52px;
+            left: 25px;
+            z-index: 21;
+            background: rgba(10, 15, 40, 0.9);
+            border: 1px solid #287cff;
+            color: #4db8ff;
+            padding: 7px 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        #controlsToggleBtn:hover {
+            background: rgba(40, 124, 255, 0.4);
+            color: #fff;
+        }
+
+        body.controls-hidden #controls {
+            display: none;
+        }
+
+        body.controls-hidden #controlsToggleBtn {
+            top: 80px;
+        }
+
         /* Control Panel */
         #controls {
             position: absolute;
@@ -216,6 +244,8 @@
         <div id="title">🌌 3D Solar System Explorer</div>
         <a href="index.html" id="homeBtn">🏠 Home</a>
     </div>
+
+    <button id="controlsToggleBtn" type="button" aria-expanded="true">☰ Hide Controls</button>
     
     <!-- Simulation Control Panel -->
     <div id="controls">
@@ -252,6 +282,21 @@
 
         <div class="control-group checkbox-group">
             <label><input type="checkbox" id="toggleMoons"> Show Natural Satellites</label>
+        </div>
+
+        <div class="control-group checkbox-group">
+            <label><input type="checkbox" id="toggleAxes"> Show Planet Axis Motion</label>
+        </div>
+
+        <div class="control-group checkbox-group">
+            <label><input type="checkbox" id="toggleOrbitProgress"> Show Orbit Day Progress</label>
+        </div>
+
+        <div class="control-group">
+            <label for="orbitProgressPlanet">Progress Target:</label>
+            <select id="orbitProgressPlanet">
+                <option value="all">All Planets</option>
+            </select>
         </div>
 
         <div class="control-group checkbox-group">
@@ -299,6 +344,10 @@
     const fontVal = document.getElementById("fontVal");
     const toggleOrbits = document.getElementById("toggleOrbits");
     const toggleMoons = document.getElementById("toggleMoons");
+    const toggleAxes = document.getElementById("toggleAxes");
+    const toggleOrbitProgress = document.getElementById("toggleOrbitProgress");
+    const orbitProgressPlanet = document.getElementById("orbitProgressPlanet");
+    const controlsToggleBtn = document.getElementById("controlsToggleBtn");
     const toggleGalaxy = document.getElementById("toggleGalaxy");
     const toggleSpaceView = document.getElementById("toggleSpaceView");
     const launchFromSelect = document.getElementById("launchFrom");
@@ -313,6 +362,9 @@
     let labelFontSize = 11;
     let renderOrbits = true;
     let renderMoons = false;
+    let renderAxes = false;
+    let renderOrbitProgress = false;
+    let orbitProgressTarget = "all";
     let galacticRevolutionActive = false;
     let spaceViewActive = false;
 
@@ -357,6 +409,24 @@
         renderMoons = e.target.checked;
     });
 
+    toggleAxes.addEventListener("change", (e) => {
+        renderAxes = e.target.checked;
+    });
+
+    toggleOrbitProgress.addEventListener("change", (e) => {
+        renderOrbitProgress = e.target.checked;
+    });
+
+    orbitProgressPlanet.addEventListener("change", (e) => {
+        orbitProgressTarget = e.target.value;
+    });
+
+    controlsToggleBtn.addEventListener("click", () => {
+        const controlsHidden = document.body.classList.toggle("controls-hidden");
+        controlsToggleBtn.textContent = controlsHidden ? "☰ Show Controls" : "☰ Hide Controls";
+        controlsToggleBtn.setAttribute("aria-expanded", String(!controlsHidden));
+    });
+
     toggleGalaxy.addEventListener("change", (e) => {
         galacticRevolutionActive = e.target.checked;
     });
@@ -367,14 +437,14 @@
 
     // Embedded Planet Data & Telemetry
     const planets = [
-        { name: "Mercury", distance: 55, size: 4, color: "#aaa", radiusKm: "2,440 km", period: "88 days" },
-        { name: "Venus", distance: 80, size: 7, color: "#d9a441", radiusKm: "6,051 km", period: "225 days" },
-        { name: "Earth", distance: 110, size: 8, color: "#4287f5", radiusKm: "6,371 km", period: "365.25 days", moons: [{ name: "Moon", distance: 16, size: 2.2, color: "#ccc", speedFactor: 3 }] },
-        { name: "Mars", distance: 145, size: 6, color: "#e34a33", radiusKm: "3,389 km", period: "687 days", moons: [{ name: "Phobos", distance: 11, size: 1.4, color: "#999", speedFactor: 4 }, { name: "Deimos", distance: 17, size: 1.1, color: "#aaa", speedFactor: 2.5 }] },
-        { name: "Jupiter", distance: 190, size: 14, color: "#d6a46c", radiusKm: "69,911 km", period: "11.9 years", moons: [{ name: "Io", distance: 22, size: 2, color: "#e3c16f", speedFactor: 5 }, { name: "Europa", distance: 28, size: 1.8, color: "#c2d1e0", speedFactor: 3.8 }, { name: "Ganymede", distance: 36, size: 2.6, color: "#a38c6c", speedFactor: 2.5 }, { name: "Callisto", distance: 44, size: 2.4, color: "#7a6b58", speedFactor: 1.8 }] },
-        { name: "Saturn", distance: 240, size: 12, color: "#e8c878", radiusKm: "58,232 km", period: "29.5 years", moons: [{ name: "Titan", distance: 30, size: 2.8, color: "#d9ae68", speedFactor: 2.2 }] },
-        { name: "Uranus", distance: 290, size: 10, color: "#72d6e8", radiusKm: "25,362 km", period: "84 years" },
-        { name: "Neptune", distance: 335, size: 10, color: "#4169e1", radiusKm: "24,622 km", period: "165 years" }
+        { name: "Mercury", distance: 55, size: 4, color: "#aaa", radiusKm: "2,440 km", period: "88 days", orbitalDays: 88, axialTilt: 0.03, rotationSpeed: 0.9 },
+        { name: "Venus", distance: 80, size: 7, color: "#d9a441", radiusKm: "6,051 km", period: "225 days", orbitalDays: 225, axialTilt: 177.4, rotationSpeed: -0.7 },
+        { name: "Earth", distance: 110, size: 8, color: "#4287f5", radiusKm: "6,371 km", period: "365.25 days", orbitalDays: 365.25, axialTilt: 23.4, rotationSpeed: 1.4, moons: [{ name: "Moon", distance: 16, size: 2.2, color: "#ccc", speedFactor: 3 }] },
+        { name: "Mars", distance: 145, size: 6, color: "#e34a33", radiusKm: "3,389 km", period: "687 days", orbitalDays: 687, axialTilt: 25.2, rotationSpeed: 1.3, moons: [{ name: "Phobos", distance: 11, size: 1.4, color: "#999", speedFactor: 4 }, { name: "Deimos", distance: 17, size: 1.1, color: "#aaa", speedFactor: 2.5 }] },
+        { name: "Jupiter", distance: 190, size: 14, color: "#d6a46c", radiusKm: "69,911 km", period: "11.9 years", orbitalDays: 4332.5, axialTilt: 3.1, rotationSpeed: 1.8, moons: [{ name: "Io", distance: 22, size: 2, color: "#e3c16f", speedFactor: 5 }, { name: "Europa", distance: 28, size: 1.8, color: "#c2d1e0", speedFactor: 3.8 }, { name: "Ganymede", distance: 36, size: 2.6, color: "#a38c6c", speedFactor: 2.5 }, { name: "Callisto", distance: 44, size: 2.4, color: "#7a6b58", speedFactor: 1.8 }] },
+        { name: "Saturn", distance: 240, size: 12, color: "#e8c878", radiusKm: "58,232 km", period: "29.5 years", orbitalDays: 10759, axialTilt: 26.7, rotationSpeed: 1.6, moons: [{ name: "Titan", distance: 30, size: 2.8, color: "#d9ae68", speedFactor: 2.2 }] },
+        { name: "Uranus", distance: 290, size: 10, color: "#72d6e8", radiusKm: "25,362 km", period: "84 years", orbitalDays: 30687, axialTilt: 97.8, rotationSpeed: -1.1 },
+        { name: "Neptune", distance: 335, size: 10, color: "#4169e1", radiusKm: "24,622 km", period: "165 years", orbitalDays: 60190, axialTilt: 28.3, rotationSpeed: 1.2 }
     ];
 
     // Populate Launch Dropdowns
@@ -388,6 +458,11 @@
         opt2.value = p.name;
         opt2.textContent = p.name;
         launchToSelect.appendChild(opt2);
+
+        const progressOption = document.createElement("option");
+        progressOption.value = p.name;
+        progressOption.textContent = p.name;
+        orbitProgressPlanet.appendChild(progressOption);
     });
     if (planets.length > 1) launchToSelect.selectedIndex = 2;
 
@@ -474,6 +549,10 @@
             ctx.stroke();
         }
 
+        if (renderOrbitProgress && (orbitProgressTarget === "all" || orbitProgressTarget === planet.name)) {
+            drawOrbitProgress(planet, cx, cy, x, y, coords.angle, index);
+        }
+
         // Current Scaled Planet Size
         const currentSize = planet.size * planetSizeMultiplier;
 
@@ -485,6 +564,10 @@
         ctx.shadowColor = planet.color;
         ctx.fill();
         ctx.shadowBlur = 0;
+
+        if (renderAxes) {
+            drawPlanetAxis(x, y, currentSize, planet, time);
+        }
 
         // Saturn Rings
         if (planet.name === "Saturn") {
@@ -521,6 +604,52 @@
         ctx.fillStyle = "#eee";
         ctx.font = `${labelFontSize}px Arial`;
         ctx.fillText(planet.name, x + currentSize + 6, y + 4);
+    }
+
+    function drawOrbitProgress(planet, cx, cy, x, y, angle, index) {
+        const completedAngle = ((angle - index) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
+        const elapsedDays = (completedAngle / (Math.PI * 2)) * planet.orbitalDays;
+        const midX = cx + (x - cx) * 0.55;
+        const midY = cy + (y - cy) * 0.55;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.lineTo(x, y);
+        ctx.strokeStyle = "rgba(255, 226, 92, 0.78)";
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([6, 5]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = "#fff2a6";
+        ctx.font = "10px Arial";
+        ctx.fillText(`Day ${Math.round(elapsedDays)} / ${planet.orbitalDays} days`, midX + 4, midY - 4);
+        ctx.restore();
+    }
+
+    function drawPlanetAxis(x, y, planetSize, planet, time) {
+        const tilt = (planet.axialTilt * Math.PI) / 180;
+        const motion = time * 0.0012 * planet.rotationSpeed;
+        const axisAngle = tilt + motion;
+        const axisLength = Math.max(planetSize * 3.2, 16);
+        const endX = Math.cos(axisAngle) * axisLength;
+        const endY = Math.sin(axisAngle) * axisLength;
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(x - endX, y - endY);
+        ctx.lineTo(x + endX, y + endY);
+        ctx.strokeStyle = "rgba(255, 245, 180, 0.9)";
+        ctx.lineWidth = Math.max(1, planetSizeMultiplier * 0.8);
+        ctx.setLineDash([4, 3]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = "#fff4a8";
+        ctx.beginPath();
+        ctx.arc(x + endX, y + endY, Math.max(1.5, planetSizeMultiplier), 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
     }
 
     // LAUNCH ROCKET ACTION & ANIMATION
