@@ -25,6 +25,10 @@
             background: radial-gradient(circle at center, #10152e 0%, #050716 45%, #000 100%);
         }
 
+        #universe.background-custom {
+            background: var(--universe-background, #050716);
+        }
+
         canvas {
             position: absolute;
             top: 0;
@@ -90,6 +94,28 @@
             color: #fff;
         }
 
+        #fullscreenBtn {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            width: 44px;
+            height: 44px;
+            z-index: 30;
+            background: rgba(40, 124, 255, 0.4);
+            border: 1px solid #287cff;
+            color: #fff;
+            padding: 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        #fullscreenBtn:hover,
+        #fullscreenBtn:focus-visible {
+            background: rgba(40, 124, 255, 0.8);
+        }
+
         body.controls-hidden #controls {
             display: none;
         }
@@ -103,16 +129,228 @@
             position: absolute;
             left: 25px;
             top: 80px;
-            width: 280px;
+            width: min(var(--controls-width, 390px), calc(100vw - 30px));
             max-height: calc(100vh - 100px);
-            overflow-y: auto;
+            overflow: visible;
             padding: 15px 20px;
-            background: rgba(10, 15, 40, 0.85);
+            background: rgba(10, 15, 40, 0.42);
             border: 1px solid #287cff;
             border-radius: 15px;
             box-shadow: 0 0 25px rgba(0, 120, 255, 0.4);
             z-index: 20;
             backdrop-filter: blur(5px);
+            font-size: calc(24px * var(--controls-scale, 1));
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px 14px;
+        }
+
+        #controls > h3 {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: calc(25px * var(--controls-scale, 1));
+            line-height: 1.1;
+            margin-bottom: 5px;
+        }
+
+        .control-section {
+            min-width: 0;
+            padding: 7px 8px;
+            border: 1px solid rgba(77, 184, 255, 0.28);
+            border-radius: 10px;
+            background: rgba(0, 15, 35, 0.24);
+        }
+
+        .control-section.wide {
+            grid-column: 1 / -1;
+        }
+
+        .control-section.compact {
+            padding: 6px;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 2px 6px;
+        }
+
+        .control-section.compact .section-title {
+            grid-column: 1 / -1;
+        }
+
+        .control-section.compact .tool {
+            min-height: 32px;
+            margin: 2px 0;
+        }
+
+        .control-section.compact .tool-icon {
+            width: 30px;
+            height: 30px;
+        }
+
+        .control-section.compact .tool[data-tooltip]::after {
+            left: 0;
+        }
+
+        .utility-tray {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            border: 1px solid rgba(77, 184, 255, 0.32);
+            border-radius: 10px;
+            overflow: visible;
+            background: rgba(0, 15, 35, 0.18);
+        }
+
+        .utility-tray .section-title {
+            white-space: nowrap;
+        }
+
+        .utility-tray .control-section {
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+        }
+
+        .utility-tray .control-section + .control-section {
+            border-left: 1px solid rgba(77, 184, 255, 0.28);
+        }
+
+        .utility-tray .control-section:first-child {
+            grid-column: span 2;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .utility-tray .control-section:first-child .tool {
+            width: auto;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            margin: 0 0 5px;
+            color: #4db8ff;
+            font-size: calc(12px * var(--controls-scale, 1));
+            font-weight: bold;
+            letter-spacing: 0.04em;
+        }
+
+        .tool-icon {
+            display: inline-grid;
+            place-items: center;
+            flex: 0 0 auto;
+            width: 28px;
+            height: 28px;
+            border: 1px solid rgba(77, 184, 255, 0.55);
+            border-radius: 7px;
+            background: rgba(10, 35, 70, 0.7);
+            color: #fff;
+            font-size: calc(16px * var(--controls-scale, 1));
+        }
+
+        .tool {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+            min-height: 31px;
+            margin: 3px 0;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .tool:hover .tool-icon,
+        .tool:focus-within .tool-icon,
+        .tool:has(input:focus-visible) .tool-icon,
+        .tool:has(select:focus-visible) .tool-icon {
+            border-color: #fff;
+            background: rgba(40, 124, 255, 0.65);
+        }
+
+        .tool[data-tooltip]::after,
+        .section-title[data-tooltip]::after {
+            position: absolute;
+            left: 0;
+            bottom: calc(100% + 7px);
+            z-index: 40;
+            width: max-content;
+            max-width: min(280px, 35vw);
+            white-space: normal;
+            padding: 5px 7px;
+            border: 1px solid #287cff;
+            border-radius: 6px;
+            background: #07152b;
+            color: #fff;
+            content: attr(data-tooltip);
+            font-size: 13px;
+            line-height: 1.25;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(4px);
+            transition: opacity 0.15s ease, transform 0.15s ease;
+        }
+
+        .tool[data-tooltip]:hover::after,
+        .tool[data-tooltip]:focus-within::after,
+        .section-title[data-tooltip]:hover::after {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .utility-tray .tool[data-tooltip]::after {
+            bottom: auto;
+            top: calc(100% + 8px);
+        }
+
+        .tool input[type="range"] {
+            min-width: 0;
+            flex: 1;
+        }
+
+        .tool input[type="checkbox"] {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            opacity: 0;
+        }
+
+        .tool input[type="checkbox"]:checked + .tool-icon {
+            border-color: #8cff98;
+            background: rgba(22, 140, 100, 0.7);
+        }
+
+        .tool select {
+            min-width: 0;
+            flex: 1;
+            min-height: 30px;
+            padding: 3px 5px;
+            font-size: calc(17px * var(--controls-scale, 1));
+        }
+
+        .tool input[type="color"] {
+            width: 48px;
+            min-height: 30px;
+            padding: 2px;
+        }
+
+        .tool-value {
+            min-width: 45px;
+            color: #4db8ff;
+            font-size: calc(16px * var(--controls-scale, 1));
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
         }
 
         #controls::-webkit-scrollbar {
@@ -125,22 +363,28 @@
 
         #controls h3 {
             margin-top: 0;
-            margin-bottom: 12px;
+            margin-bottom: 5px;
             color: #4db8ff;
-            font-size: 15px;
+            font-size: calc(25px * var(--controls-scale, 1));
+            line-height: 1.1;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            grid-column: 1 / -1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .control-group {
             margin-bottom: 12px;
+            min-width: 0;
         }
 
         .control-group label {
             display: flex;
             justify-content: space-between;
             color: #ccc;
-            font-size: 12px;
+            font-size: calc(24px * var(--controls-scale, 1));
             margin-bottom: 5px;
         }
 
@@ -162,7 +406,41 @@
             gap: 8px;
             cursor: pointer;
             color: #fff;
-            font-size: 13px;
+            font-size: calc(24px * var(--controls-scale, 1));
+            line-height: 1.15;
+        }
+
+        .control-group input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+        }
+
+        .control-group select,
+        .control-group input[type="color"] {
+            width: 100%;
+            min-height: 42px;
+            font-size: calc(22px * var(--controls-scale, 1));
+        }
+
+        .control-group.checkbox-group {
+            align-self: center;
+        }
+
+        .launch-box {
+            grid-column: 1 / -1;
+            margin-top: 0;
+        }
+
+        .control-group input[type="color"] {
+            padding: 2px;
+            cursor: pointer;
+        }
+
+        .texture-note {
+            margin: 5px 0 0;
+            color: #a9c7e8;
+            font-size: 11px;
+            line-height: 1.3;
         }
 
         /* Launch Section */
@@ -221,6 +499,22 @@
             box-shadow: 0 0 25px rgba(0, 120, 255, 0.4);
             z-index: 20;
             backdrop-filter: blur(5px);
+            display: none;
+        }
+
+        body.info-visible #info {
+            display: block;
+        }
+
+        body.fullscreen-active #header-group,
+        body.fullscreen-active #controls,
+        body.fullscreen-active #controlsToggleBtn,
+        body.fullscreen-active #info {
+            display: none;
+        }
+
+        body.fullscreen-active.fullscreen-controls-visible #controls {
+            display: block;
         }
 
         #info h2 {
@@ -234,6 +528,42 @@
             line-height: 1.5;
             font-size: 13px;
             margin-bottom: 0;
+        }
+
+        @media (max-width: 520px) {
+            #controls {
+                padding: 14px;
+                grid-template-columns: 1fr;
+            }
+
+            .control-section.wide,
+            .control-section.compact,
+            .launch-box,
+            #controls h3 {
+                grid-column: 1;
+            }
+
+            .utility-tray {
+                grid-template-columns: 1fr;
+            }
+
+            .utility-tray .control-section:first-child {
+                grid-column: auto;
+            }
+
+            .utility-tray .control-section:first-child .tool {
+                display: flex;
+                width: auto;
+            }
+
+            .utility-tray .control-section + .control-section {
+                border-top: 1px solid rgba(77, 184, 255, 0.28);
+                border-left: 0;
+            }
+
+            .tool[data-tooltip]::after {
+                left: 0;
+            }
         }
     </style>
 </head>
@@ -250,61 +580,80 @@
     <!-- Simulation Control Panel -->
     <div id="controls">
         <h3>Simulation Controls</h3>
-        
-        <div class="control-group">
-            <label>Planet Scale: <span id="sizeVal">1.0x</span></label>
-            <input type="range" id="sizeSlider" min="0.5" max="3.0" step="0.1" value="1.0">
-        </div>
 
-        <div class="control-group">
-            <label>Orbit Radius: <span id="orbitRadiusVal">1.0x</span></label>
-            <input type="range" id="orbitRadiusSlider" min="0.5" max="2.0" step="0.1" value="1.0">
-        </div>
+        <section class="control-section wide">
+            <h4 class="section-title" data-tooltip="Adjust the panel size and the visual scale of the planets">Scale</h4>
+            <div class="tool" data-tooltip="Panel size">
+                <span class="tool-icon">▣</span><label class="sr-only" for="controlsSizeSlider">Panel size</label>
+                <input type="range" id="controlsSizeSlider" min="280" max="520" step="10" value="390" aria-label="Panel size">
+                <span class="tool-value" id="controlsSizeVal">390px</span>
+            </div>
+            <div class="tool" data-tooltip="Planet scale">
+                <span class="tool-icon">●</span><label class="sr-only" for="sizeSlider">Planet scale</label>
+                <input type="range" id="sizeSlider" min="0.5" max="3.0" step="0.1" value="1.0" aria-label="Planet scale">
+                <span class="tool-value" id="sizeVal">1.0x</span>
+            </div>
+            <p class="texture-note">Real planetary imagery loads from Wikimedia Commons. Solid colors remain available if an image is unavailable.</p>
+        </section>
 
-        <div class="control-group">
-            <label>Moon Size: <span id="moonSizeVal">1.0x</span></label>
-            <input type="range" id="moonSizeSlider" min="0.5" max="3.0" step="0.1" value="1.0">
-        </div>
+        <section class="control-section wide">
+            <h4 class="section-title" data-tooltip="Control orbital motion">Motion</h4>
+            <div class="tool" data-tooltip="Orbit radius">
+                <span class="tool-icon">◎</span><label class="sr-only" for="orbitRadiusSlider">Orbit radius</label>
+                <input type="range" id="orbitRadiusSlider" min="0.5" max="2.0" step="0.1" value="1.0" aria-label="Orbit radius">
+                <span class="tool-value" id="orbitRadiusVal">1.0x</span>
+            </div>
+            <div class="tool" data-tooltip="Orbit speed">
+                <span class="tool-icon">⏱</span><label class="sr-only" for="speedSlider">Orbit speed</label>
+                <input type="range" id="speedSlider" min="0" max="4.0" step="0.2" value="1.0" aria-label="Orbit speed">
+                <span class="tool-value" id="speedVal">1.0x</span>
+            </div>
+            <div class="tool" data-tooltip="Moon size">
+                <span class="tool-icon">◌</span><label class="sr-only" for="moonSizeSlider">Moon size</label>
+                <input type="range" id="moonSizeSlider" min="0.5" max="3.0" step="0.1" value="1.0" aria-label="Moon size">
+                <span class="tool-value" id="moonSizeVal">1.0x</span>
+            </div>
+        </section>
 
-        <div class="control-group">
-            <label>Orbit Speed: <span id="speedVal">1.0x</span></label>
-            <input type="range" id="speedSlider" min="0" max="4.0" step="0.2" value="1.0">
-        </div>
+        <section class="control-section wide">
+            <h4 class="section-title" data-tooltip="Change the scene and label appearance">Appearance</h4>
+            <div class="tool" data-tooltip="Background color">
+                <span class="tool-icon">◐</span><label class="sr-only" for="backgroundColor">Background color</label>
+                <input type="color" id="backgroundColor" value="#050716" aria-label="Background color">
+            </div>
+            <div class="tool" data-tooltip="Label font size">
+                <span class="tool-icon">A</span><label class="sr-only" for="fontSizeSlider">Label font size</label>
+                <input type="range" id="fontSizeSlider" min="8" max="24" step="1" value="11" aria-label="Label font size">
+                <span class="tool-value" id="fontVal">11px</span>
+            </div>
+            <div class="tool" data-tooltip="Progress target">
+                <span class="tool-icon">⌖</span><label class="sr-only" for="orbitProgressPlanet">Progress target</label>
+                <select id="orbitProgressPlanet" aria-label="Progress target"><option value="all">All Planets</option></select>
+            </div>
+        </section>
 
-        <div class="control-group">
-            <label>Label Font Size: <span id="fontVal">11px</span></label>
-            <input type="range" id="fontSizeSlider" min="8" max="24" step="1" value="11">
-        </div>
+        <div class="utility-tray">
+        <section class="control-section compact">
+            <h4 class="section-title" data-tooltip="Show or hide visual layers">Layers</h4>
+            <label class="tool" data-tooltip="Show orbit lines"><input type="checkbox" id="toggleOrbits" checked aria-label="Show orbit lines"><span class="tool-icon">○</span><span class="sr-only">Orbit lines</span></label>
+            <label class="tool" data-tooltip="Use colorful orbit lines"><input type="checkbox" id="toggleColorfulOrbits" aria-label="Colorful orbit lines"><span class="tool-icon">🌈</span><span class="sr-only">Colorful orbit lines</span></label>
+            <label class="tool" data-tooltip="Show natural satellites"><input type="checkbox" id="toggleMoons" aria-label="Show natural satellites"><span class="tool-icon">◌</span><span class="sr-only">Natural satellites</span></label>
+            <label class="tool" data-tooltip="Show planet axis motion"><input type="checkbox" id="toggleAxes" aria-label="Show planet axis motion"><span class="tool-icon">⤢</span><span class="sr-only">Planet axis motion</span></label>
+            <label class="tool" data-tooltip="Show orbit day progress"><input type="checkbox" id="toggleOrbitProgress" aria-label="Show orbit day progress"><span class="tool-icon">⌁</span><span class="sr-only">Orbit day progress</span></label>
+            <label class="tool" data-tooltip="Switch planet colors"><input type="checkbox" id="toggleRealisticPlanets" checked aria-label="Use realistic planet textures"><span class="tool-icon">🪐</span><span class="sr-only">Realistic planet textures</span></label>
+        </section>
 
-        <div class="control-group checkbox-group">
-            <label><input type="checkbox" id="toggleOrbits" checked> Show Orbit Lines</label>
-        </div>
+        <section class="control-section compact">
+            <h4 class="section-title" data-tooltip="Change the movement environment">Environment</h4>
+            <label class="tool" data-tooltip="Galactic revolution"><input type="checkbox" id="toggleGalaxy" aria-label="Galactic revolution"><span class="tool-icon">✺</span><span class="sr-only">Galactic revolution</span></label>
+            <label class="tool" data-tooltip="Space view drift"><input type="checkbox" id="toggleSpaceView" aria-label="Space view drift"><span class="tool-icon">✦</span><span class="sr-only">Space view drift</span></label>
+        </section>
 
-        <div class="control-group checkbox-group">
-            <label><input type="checkbox" id="toggleMoons"> Show Natural Satellites</label>
-        </div>
-
-        <div class="control-group checkbox-group">
-            <label><input type="checkbox" id="toggleAxes"> Show Planet Axis Motion</label>
-        </div>
-
-        <div class="control-group checkbox-group">
-            <label><input type="checkbox" id="toggleOrbitProgress"> Show Orbit Day Progress</label>
-        </div>
-
-        <div class="control-group">
-            <label for="orbitProgressPlanet">Progress Target:</label>
-            <select id="orbitProgressPlanet">
-                <option value="all">All Planets</option>
-            </select>
-        </div>
-
-        <div class="control-group checkbox-group">
-            <label><input type="checkbox" id="toggleGalaxy"> Galactic Revolution</label>
-        </div>
-
-        <div class="control-group checkbox-group">
-            <label><input type="checkbox" id="toggleSpaceView"> Space View Drift</label>
+        <section class="control-section compact">
+            <h4 class="section-title" data-tooltip="Enable object tracking sounds">Audio</h4>
+            <label class="tool" data-tooltip="Track planet sounds"><input type="checkbox" id="toggleSound" aria-label="Track planet sounds"><span class="tool-icon">♪</span><span class="sr-only">Track planet sounds</span></label>
+            <label class="tool" data-tooltip="Continuous tracking sound"><input type="checkbox" id="toggleContinuousSound" aria-label="Continuous tracking sound"><span class="tool-icon">♫</span><span class="sr-only">Continuous tracking sound</span></label>
+        </section>
         </div>
 
         <!-- Rocket Launch Control -->
@@ -318,6 +667,8 @@
         </div>
     </div>
 
+    <button id="fullscreenBtn" type="button" title="Enter full screen" aria-label="Enter full screen">⛶</button>
+
     <canvas id="space"></canvas>
 
     <div id="info">
@@ -329,11 +680,14 @@
 <script>
     const canvas = document.getElementById("space");
     const ctx = canvas.getContext("2d");
+    const universe = document.getElementById("universe");
     const info = document.getElementById("info");
     
     // UI Elements
     const sizeSlider = document.getElementById("sizeSlider");
     const sizeVal = document.getElementById("sizeVal");
+    const controlsSizeSlider = document.getElementById("controlsSizeSlider");
+    const controlsSizeVal = document.getElementById("controlsSizeVal");
     const orbitRadiusSlider = document.getElementById("orbitRadiusSlider");
     const orbitRadiusVal = document.getElementById("orbitRadiusVal");
     const moonSizeSlider = document.getElementById("moonSizeSlider");
@@ -343,13 +697,19 @@
     const fontSizeSlider = document.getElementById("fontSizeSlider");
     const fontVal = document.getElementById("fontVal");
     const toggleOrbits = document.getElementById("toggleOrbits");
+    const toggleColorfulOrbits = document.getElementById("toggleColorfulOrbits");
+    const backgroundColor = document.getElementById("backgroundColor");
     const toggleMoons = document.getElementById("toggleMoons");
     const toggleAxes = document.getElementById("toggleAxes");
     const toggleOrbitProgress = document.getElementById("toggleOrbitProgress");
+    const toggleRealisticPlanets = document.getElementById("toggleRealisticPlanets");
     const orbitProgressPlanet = document.getElementById("orbitProgressPlanet");
     const controlsToggleBtn = document.getElementById("controlsToggleBtn");
     const toggleGalaxy = document.getElementById("toggleGalaxy");
     const toggleSpaceView = document.getElementById("toggleSpaceView");
+    const toggleSound = document.getElementById("toggleSound");
+    const toggleContinuousSound = document.getElementById("toggleContinuousSound");
+    const fullscreenBtn = document.getElementById("fullscreenBtn");
     const launchFromSelect = document.getElementById("launchFrom");
     const launchToSelect = document.getElementById("launchTo");
     const launchBtn = document.getElementById("launchBtn");
@@ -361,12 +721,19 @@
     let orbitSpeedMultiplier = 1.0;
     let labelFontSize = 11;
     let renderOrbits = true;
+    let renderColorfulOrbits = false;
     let renderMoons = false;
     let renderAxes = false;
     let renderOrbitProgress = false;
+    let renderRealisticPlanets = true;
     let orbitProgressTarget = "all";
     let galacticRevolutionActive = false;
     let spaceViewActive = false;
+    let soundEffectsEnabled = false;
+    let continuousSoundEnabled = false;
+    let trackingSoundKey = "";
+    let trackingSoundTimer = null;
+    let audioContext = null;
 
     // Rocket Flight State
     let activeRocket = null;
@@ -376,6 +743,14 @@
     let currentCy = 0;
 
     // Listeners for Control Panel Sliders & Checkboxes
+    controlsSizeSlider.addEventListener("input", (e) => {
+        const panelWidth = parseInt(e.target.value, 10);
+        const panelScale = panelWidth / 390;
+        universe.style.setProperty("--controls-width", `${panelWidth}px`);
+        universe.style.setProperty("--controls-scale", panelScale.toFixed(3));
+        controlsSizeVal.textContent = `${panelWidth}px`;
+    });
+
     sizeSlider.addEventListener("input", (e) => {
         planetSizeMultiplier = parseFloat(e.target.value);
         sizeVal.textContent = planetSizeMultiplier.toFixed(1) + "x";
@@ -405,12 +780,25 @@
         renderOrbits = e.target.checked;
     });
 
+    toggleColorfulOrbits.addEventListener("change", (e) => {
+        renderColorfulOrbits = e.target.checked;
+    });
+
+    backgroundColor.addEventListener("input", (e) => {
+        universe.style.setProperty("--universe-background", e.target.value);
+        universe.classList.add("background-custom");
+    });
+
     toggleMoons.addEventListener("change", (e) => {
         renderMoons = e.target.checked;
     });
 
     toggleAxes.addEventListener("change", (e) => {
         renderAxes = e.target.checked;
+    });
+
+    toggleRealisticPlanets.addEventListener("change", (e) => {
+        renderRealisticPlanets = e.target.checked;
     });
 
     toggleOrbitProgress.addEventListener("change", (e) => {
@@ -434,6 +822,24 @@
     toggleSpaceView.addEventListener("change", (e) => {
         spaceViewActive = e.target.checked;
     });
+
+    toggleSound.addEventListener("change", (e) => {
+        soundEffectsEnabled = e.target.checked;
+        if (soundEffectsEnabled) {
+            playSound("select");
+            startTrackingSound();
+        } else {
+            stopTrackingSound();
+        }
+    });
+
+    toggleContinuousSound.addEventListener("change", (e) => {
+        continuousSoundEnabled = e.target.checked;
+        if (continuousSoundEnabled) startTrackingSound();
+        else stopTrackingSound();
+    });
+
+    fullscreenBtn.addEventListener("click", toggleFullScreen);
 
     // Embedded Planet Data & Telemetry
     const planets = [
@@ -476,6 +882,26 @@
         Uranus: "An ice giant whose rotational axis is tilted almost completely sideways.",
         Neptune: "A distant, deep blue ice giant swept by supersonic winds and dark storms."
     };
+
+    const planetTextureUrls = {
+        Mercury: "https://upload.wikimedia.org/wikipedia/commons/4/4a/Mercury_in_true_color.jpg",
+        Venus: "https://upload.wikimedia.org/wikipedia/commons/e/e5/Venus-real_color.jpg",
+        Earth: "https://threejs.org/examples/textures/planets/earth_atmos_2048.jpg",
+        Mars: "https://upload.wikimedia.org/wikipedia/commons/0/02/OSIRIS_Mars_true_color.jpg",
+        Jupiter: "https://upload.wikimedia.org/wikipedia/commons/e/e2/Jupiter.jpg",
+        Saturn: "https://upload.wikimedia.org/wikipedia/commons/c/c7/Saturn_during_Equinox.jpg",
+        Uranus: "https://upload.wikimedia.org/wikipedia/commons/3/3d/Uranus2.jpg",
+        Neptune: "https://upload.wikimedia.org/wikipedia/commons/5/56/Neptune_Full.jpg"
+    };
+
+    const planetTextures = new Map();
+    planets.forEach(planet => {
+        const image = new Image();
+        image.crossOrigin = "anonymous";
+        image.onload = () => planetTextures.set(planet.name, image);
+        image.onerror = () => console.warn(`Texture unavailable for ${planet.name}; using color fallback.`);
+        image.src = planetTextureUrls[planet.name];
+    });
 
     function resizeCanvas() {
         width = canvas.width = window.innerWidth;
@@ -544,9 +970,12 @@
         if (renderOrbits) {
             ctx.beginPath();
             ctx.arc(cx, cy, coords.orbit, 0, Math.PI * 2);
-            ctx.strokeStyle = "rgba(100,150,255,0.12)";
-            ctx.lineWidth = 1;
+            const orbitColors = ["#4db8ff", "#ff9f43", "#8cff98", "#ff6b9d", "#c792ff", "#ffe66d", "#56d8d8", "#ff7b54"];
+            ctx.strokeStyle = renderColorfulOrbits ? orbitColors[index % orbitColors.length] : "rgba(100,150,255,0.12)";
+            ctx.globalAlpha = renderColorfulOrbits ? 0.7 : 1;
+            ctx.lineWidth = renderColorfulOrbits ? 1.5 : 1;
             ctx.stroke();
+            ctx.globalAlpha = 1;
         }
 
         if (renderOrbitProgress && (orbitProgressTarget === "all" || orbitProgressTarget === planet.name)) {
@@ -556,36 +985,39 @@
         // Current Scaled Planet Size
         const currentSize = planet.size * planetSizeMultiplier;
 
-        // Planet Body Rendering
+        // Planet body rendering uses real imagery when available.
         ctx.beginPath();
         ctx.arc(x, y, currentSize, 0, Math.PI * 2);
-        ctx.fillStyle = planet.color;
         ctx.shadowBlur = 12 * planetSizeMultiplier;
         ctx.shadowColor = planet.color;
-        ctx.fill();
+        const texture = renderRealisticPlanets ? planetTextures.get(planet.name) : null;
+        if (texture) {
+            ctx.save();
+            ctx.clip();
+            ctx.drawImage(texture, x - currentSize, y - currentSize, currentSize * 2, currentSize * 2);
+            const lighting = ctx.createRadialGradient(x - currentSize * 0.35, y - currentSize * 0.4, currentSize * 0.05, x, y, currentSize * 1.15);
+            lighting.addColorStop(0, "rgba(255,255,255,0.28)");
+            lighting.addColorStop(0.55, "rgba(255,255,255,0)");
+            lighting.addColorStop(1, "rgba(0,0,0,0.52)");
+            ctx.fillStyle = lighting;
+            ctx.fillRect(x - currentSize, y - currentSize, currentSize * 2, currentSize * 2);
+            ctx.restore();
+        } else {
+            ctx.fillStyle = planet.color;
+            ctx.fill();
+        }
         ctx.shadowBlur = 0;
 
         if (renderAxes) {
             drawPlanetAxis(x, y, currentSize, planet, time);
         }
 
-        // Saturn Rings
-        if (planet.name === "Saturn") {
-            ctx.beginPath();
-            ctx.ellipse(x, y, currentSize * 2.2, currentSize * 0.7, 0.3, 0, Math.PI * 2);
-            ctx.strokeStyle = "#d9c38a";
-            ctx.lineWidth = Math.max(2, 3 * planetSizeMultiplier);
-            ctx.stroke();
-            ctx.lineWidth = 1;
-        }
-
         // Render Natural Satellites (Moons with Names & Scaling)
         if (renderMoons && planet.moons) {
             planet.moons.forEach((moon, mIndex) => {
-                const moonAngle = time * 0.0015 * moon.speedFactor + mIndex * 2;
-                const moonDist = moon.distance * Math.max(0.7, planetSizeMultiplier * 0.8);
-                const mx = x + Math.cos(moonAngle) * moonDist;
-                const my = y + Math.sin(moonAngle) * moonDist;
+                const moonCoords = getMoonCoordinates(planet, moon, mIndex, x, y, time);
+                const mx = moonCoords.x;
+                const my = moonCoords.y;
                 const currentMoonSize = moon.size * moonSizeMultiplier;
 
                 ctx.beginPath();
@@ -606,6 +1038,15 @@
         ctx.fillText(planet.name, x + currentSize + 6, y + 4);
     }
 
+    function getMoonCoordinates(planet, moon, moonIndex, planetX, planetY, time) {
+        const moonAngle = time * 0.0015 * moon.speedFactor + moonIndex * 2;
+        const moonDist = moon.distance * Math.max(0.7, planetSizeMultiplier * 0.8);
+        return {
+            x: planetX + Math.cos(moonAngle) * moonDist,
+            y: planetY + Math.sin(moonAngle) * moonDist
+        };
+    }
+
     function drawOrbitProgress(planet, cx, cy, x, y, angle, index) {
         const completedAngle = ((angle - index) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
         const elapsedDays = (completedAngle / (Math.PI * 2)) * planet.orbitalDays;
@@ -623,7 +1064,8 @@
         ctx.setLineDash([]);
 
         ctx.fillStyle = "#fff2a6";
-        ctx.font = "10px Arial";
+        const trackerFontSize = Math.max(6, Math.floor(labelFontSize * 0.7));
+        ctx.font = `${trackerFontSize}px Arial`;
         ctx.fillText(`Day ${Math.round(elapsedDays)} / ${planet.orbitalDays} days`, midX + 4, midY - 4);
         ctx.restore();
     }
@@ -652,16 +1094,111 @@
         ctx.restore();
     }
 
+    const planetSoundProfiles = {
+        Mercury: [262, 392],
+        Venus: [294, 440],
+        Earth: [330, 494],
+        Mars: [349, 523],
+        Jupiter: [196, 294],
+        Saturn: [220, 330],
+        Uranus: [247, 370],
+        Neptune: [175, 262],
+        Moon: [523, 784],
+        Phobos: [587, 880],
+        Deimos: [659, 988],
+        Io: [392, 587],
+        Europa: [440, 659],
+        Ganymede: [294, 587],
+        Callisto: [220, 440],
+        Titan: [330, 392]
+    };
+
+    function playSound(type, soundKey = "") {
+        if (!soundEffectsEnabled) return;
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+        if (!audioContext) audioContext = new AudioContextClass();
+        if (audioContext.state === "suspended") audioContext.resume();
+
+        const profile = planetSoundProfiles[soundKey] || (type === "select" ? [392, 587] : [300, 450]);
+        const oscillator = audioContext.createOscillator();
+        const secondOscillator = audioContext.createOscillator();
+        const gain = audioContext.createGain();
+        const now = audioContext.currentTime;
+        oscillator.type = "triangle";
+        secondOscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(profile[0], now);
+        secondOscillator.frequency.setValueAtTime(profile[1], now);
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.12, now + 0.015);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
+        oscillator.connect(gain);
+        secondOscillator.connect(gain);
+        gain.connect(audioContext.destination);
+        oscillator.start(now);
+        secondOscillator.start(now);
+        oscillator.stop(now + 0.25);
+        secondOscillator.stop(now + 0.25);
+    }
+
+    function stopTrackingSound() {
+        if (trackingSoundTimer) {
+            clearInterval(trackingSoundTimer);
+            trackingSoundTimer = null;
+        }
+    }
+
+    function startTrackingSound() {
+        stopTrackingSound();
+        if (!soundEffectsEnabled || !continuousSoundEnabled || !trackingSoundKey) return;
+        playSound("track", trackingSoundKey);
+        trackingSoundTimer = setInterval(() => {
+            if (trackingSoundKey) playSound("track", trackingSoundKey);
+        }, 1600);
+    }
+
+    function showInfo(title, content, soundType) {
+        info.innerHTML = `<h2>${title}</h2>${content}`;
+        document.body.classList.add("info-visible");
+        trackingSoundKey = soundType;
+        if (continuousSoundEnabled) startTrackingSound();
+        else playSound("track", soundType);
+    }
+
+    function hideInfo() {
+        document.body.classList.remove("info-visible");
+        trackingSoundKey = "";
+        stopTrackingSound();
+    }
+
+    function toggleFullScreen() {
+        if (document.fullscreenElement) {
+            document.exitFullscreen();
+        } else {
+            universe.requestFullscreen().catch(() => {
+                info.innerHTML = "<h2>Full screen unavailable</h2><p>Your browser blocked full-screen mode.</p>";
+                document.body.classList.add("info-visible");
+            });
+        }
+    }
+
+    document.addEventListener("fullscreenchange", () => {
+        const active = Boolean(document.fullscreenElement);
+        document.body.classList.toggle("fullscreen-active", active);
+        document.body.classList.remove("fullscreen-controls-visible");
+        fullscreenBtn.textContent = "⛶";
+        fullscreenBtn.title = active ? "Exit full screen" : "Enter full screen";
+        fullscreenBtn.setAttribute("aria-label", active ? "Exit full screen" : "Enter full screen");
+        if (active) hideInfo();
+    });
+
     // LAUNCH ROCKET ACTION & ANIMATION
     launchBtn.addEventListener("click", () => {
         const fromName = launchFromSelect.value;
         const toName = launchToSelect.value;
 
         if (fromName === toName) {
-            info.innerHTML = `
-                <h2>Launch Aborted</h2>
-                <p>Source and destination planets cannot be identical. Please select two different worlds.</p>
-            `;
+            hideInfo();
             return;
         }
 
@@ -677,10 +1214,7 @@
             duration: 180
         };
 
-        info.innerHTML = `
-            <h2>🚀 Launch Initiated!</h2>
-            <p>Spacecraft en route from <b>${fromName}</b> to <b>${toName}</b>.<br>Telemetry tracking active...</p>
-        `;
+        playSound("select");
     });
 
     function drawRocket(time) {
@@ -708,11 +1242,8 @@
         ctx.fillText("🚀 Vessel", currentX + 8, currentY - 4);
 
         if (p >= 1) {
-            info.innerHTML = `
-                <h2>🎉 Mission Successful</h2>
-                <p>Spacecraft has successfully arrived at <b>${activeRocket.to.name}</b> orbit!</p>
-            `;
             activeRocket = null;
+            playSound("select");
         }
     }
 
@@ -777,6 +1308,7 @@
     canvas.addEventListener("click", function(event) {
         const mouseX = event.clientX;
         const mouseY = event.clientY;
+        let hit = false;
 
         planets.forEach((planet, index) => {
             const coords = getPlanetCoordinates(planet, accumulatedTime, index);
@@ -784,15 +1316,31 @@
 
             const distance = Math.sqrt((mouseX - coords.x) ** 2 + (mouseY - coords.y) ** 2);
 
-            if (distance < currentSize + 12) {
-                info.innerHTML = `
-                    <h2>${planet.name}</h2>
-                    <p><b>Radius:</b> ${planet.radiusKm}<br>
-                    <b>Orbital Period:</b> ${planet.period}</p>
-                    <p style="margin-top:8px;">${planetInfo[planet.name]}</p>
-                `;
+            if (!hit && distance < currentSize + 12) {
+                hit = true;
+                showInfo(planet.name, `<p><b>Radius:</b> ${planet.radiusKm}<br><b>Orbital Period:</b> ${planet.period}</p><p style="margin-top:8px;">${planetInfo[planet.name]}</p>`, planet.name);
+                return;
+            }
+
+            if (!hit && renderMoons && planet.moons) {
+                planet.moons.forEach((moon, moonIndex) => {
+                    const moonCoords = getMoonCoordinates(planet, moon, moonIndex, coords.x, coords.y, accumulatedTime);
+                    const moonSize = moon.size * moonSizeMultiplier;
+                    const moonDistance = Math.sqrt((mouseX - moonCoords.x) ** 2 + (mouseY - moonCoords.y) ** 2);
+                    if (!hit && moonDistance < moonSize + 10) {
+                        hit = true;
+                        showInfo(moon.name, `<p><b>Parent Planet:</b> ${planet.name}<br><b>Orbital Distance:</b> ${moon.distance} units</p><p style="margin-top:8px;">A natural satellite currently orbiting ${planet.name}.</p>`, moon.name);
+                    }
+                });
             }
         });
+
+        if (!hit) {
+            hideInfo();
+            if (document.fullscreenElement) {
+                document.body.classList.toggle("fullscreen-controls-visible");
+            }
+        }
     });
 
     // Initialize animation execution
